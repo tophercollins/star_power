@@ -1,0 +1,973 @@
+[
+  {
+    "name": "Kai Flame",
+    "aura": 2,
+    "talent": 7,
+    "influence": 10,
+    "legacy": 2,
+    "tags": [
+      "pop star",
+      "influencer"
+    ]
+  },
+  {
+    "name": "Mira Wave",
+    "aura": 8,
+    "talent": 4,
+    "influence": 8,
+    "legacy": 3,
+    "tags": []
+  },
+  {
+    "name": "Mira Light",
+    "aura": 5,
+    "talent": 6,
+    "influence": 3,
+    "legacy": 8,
+    "tags": [
+      "pop star",
+      "actor"
+    ]
+  },
+  {
+    "name": "Luna Moon",
+    "aura": 4,
+    "talent": 7,
+    "influence": 4,
+    "legacy": 3,
+    "tags": [
+      "pop star"
+    ]
+  },
+  {
+    "name": "Rex Storm",
+    "aura": 8,
+    "talent": 8,
+    "influence": 5,
+    "legacy": 5,
+    "tags": [
+      "pop star",
+      "rock star"
+    ]
+  },
+  {
+    "name": "Ezra Echo",
+    "aura": 1,
+    "talent": 10,
+    "influence": 3,
+    "legacy": 8,
+    "tags": []
+  },
+  {
+    "name": "Zara Moon",
+    "aura": 5,
+    "talent": 2,
+    "influence": 2,
+    "legacy": 2,
+    "tags": [
+      "rock star"
+    ]
+  },
+  {
+    "name": "Finn Star",
+    "aura": 5,
+    "talent": 2,
+    "influence": 10,
+    "legacy": 1,
+    "tags": [
+      "DJ"
+    ]
+  },
+  {
+    "name": "Luna Fox",
+    "aura": 1,
+    "talent": 7,
+    "influence": 10,
+    "legacy": 2,
+    "tags": [
+      "DJ"
+    ]
+  },
+  {
+    "name": "Lila Fox",
+    "aura": 7,
+    "talent": 10,
+    "influence": 5,
+    "legacy": 8,
+    "tags": []
+  },
+  {
+    "name": "Mira Moon",
+    "aura": 10,
+    "talent": 4,
+    "influence": 3,
+    "legacy": 5,
+    "tags": [
+      "rapper"
+    ]
+  },
+  {
+    "name": "Rex Light",
+    "aura": 7,
+    "talent": 5,
+    "influence": 10,
+    "legacy": 6,
+    "tags": [
+      "DJ"
+    ]
+  },
+  {
+    "name": "Luna Rider",
+    "aura": 9,
+    "talent": 7,
+    "influence": 5,
+    "legacy": 9,
+    "tags": [
+      "rock star",
+      "influencer"
+    ]
+  },
+  {
+    "name": "Sage Flame",
+    "aura": 7,
+    "talent": 8,
+    "influence": 5,
+    "legacy": 5,
+    "tags": []
+  },
+  {
+    "name": "Kai Fox",
+    "aura": 8,
+    "talent": 9,
+    "influence": 2,
+    "legacy": 5,
+    "tags": []
+  },
+  {
+    "name": "Jax Cruz",
+    "aura": 7,
+    "talent": 4,
+    "influence": 2,
+    "legacy": 9,
+    "tags": [
+      "rock star",
+      "DJ"
+    ]
+  },
+  {
+    "name": "Sage Star",
+    "aura": 2,
+    "talent": 9,
+    "influence": 3,
+    "legacy": 8,
+    "tags": [
+      "influencer",
+      "pop star"
+    ]
+  },
+  {
+    "name": "Nico Light",
+    "aura": 7,
+    "talent": 5,
+    "influence": 3,
+    "legacy": 10,
+    "tags": [
+      "pop star",
+      "DJ"
+    ]
+  },
+  {
+    "name": "Sky Vega",
+    "aura": 3,
+    "talent": 1,
+    "influence": 3,
+    "legacy": 3,
+    "tags": []
+  },
+  {
+    "name": "Nico Star",
+    "aura": 10,
+    "talent": 4,
+    "influence": 2,
+    "legacy": 3,
+    "tags": [
+      "pop star"
+    ]
+  },
+  {
+    "name": "Sage Wave",
+    "aura": 8,
+    "talent": 2,
+    "influence": 5,
+    "legacy": 7,
+    "tags": []
+  },
+  {
+    "name": "Sage Light",
+    "aura": 10,
+    "talent": 1,
+    "influence": 6,
+    "legacy": 7,
+    "tags": [
+      "actor"
+    ]
+  },
+  {
+    "name": "Sage Knight",
+    "aura": 9,
+    "talent": 3,
+    "influence": 8,
+    "legacy": 9,
+    "tags": [
+      "influencer",
+      "rapper"
+    ]
+  },
+  {
+    "name": "Nico Knight",
+    "aura": 1,
+    "talent": 6,
+    "influence": 7,
+    "legacy": 3,
+    "tags": []
+  },
+  {
+    "name": "Kai Ray",
+    "aura": 3,
+    "talent": 7,
+    "influence": 8,
+    "legacy": 10,
+    "tags": [
+      "pop star"
+    ]
+  },
+  {
+    "name": "Jax Cruz",
+    "aura": 5,
+    "talent": 5,
+    "influence": 4,
+    "legacy": 6,
+    "tags": [
+      "pop star",
+      "rock star"
+    ]
+  },
+  {
+    "name": "Zara Echo",
+    "aura": 7,
+    "talent": 2,
+    "influence": 3,
+    "legacy": 5,
+    "tags": [
+      "DJ",
+      "actor"
+    ]
+  },
+  {
+    "name": "Sage Stone",
+    "aura": 6,
+    "talent": 10,
+    "influence": 1,
+    "legacy": 4,
+    "tags": [
+      "DJ"
+    ]
+  },
+  {
+    "name": "Kai Wave",
+    "aura": 5,
+    "talent": 4,
+    "influence": 5,
+    "legacy": 7,
+    "tags": []
+  },
+  {
+    "name": "Nova Light",
+    "aura": 5,
+    "talent": 1,
+    "influence": 3,
+    "legacy": 3,
+    "tags": []
+  },
+  {
+    "name": "Mira Star",
+    "aura": 9,
+    "talent": 10,
+    "influence": 6,
+    "legacy": 3,
+    "tags": [
+      "DJ",
+      "rock star"
+    ]
+  },
+  {
+    "name": "Aria Light",
+    "aura": 4,
+    "talent": 8,
+    "influence": 7,
+    "legacy": 9,
+    "tags": [
+      "influencer",
+      "pop star"
+    ]
+  },
+  {
+    "name": "Aria Moon",
+    "aura": 9,
+    "talent": 5,
+    "influence": 5,
+    "legacy": 6,
+    "tags": []
+  },
+  {
+    "name": "Jax Wave",
+    "aura": 10,
+    "talent": 5,
+    "influence": 8,
+    "legacy": 5,
+    "tags": []
+  },
+  {
+    "name": "Sage Light",
+    "aura": 7,
+    "talent": 5,
+    "influence": 9,
+    "legacy": 4,
+    "tags": [
+      "actor",
+      "influencer"
+    ]
+  },
+  {
+    "name": "Sage Stone",
+    "aura": 1,
+    "talent": 5,
+    "influence": 1,
+    "legacy": 5,
+    "tags": []
+  },
+  {
+    "name": "Jax Knight",
+    "aura": 3,
+    "talent": 3,
+    "influence": 2,
+    "legacy": 1,
+    "tags": [
+      "influencer",
+      "actor"
+    ]
+  },
+  {
+    "name": "Jax Light",
+    "aura": 9,
+    "talent": 6,
+    "influence": 9,
+    "legacy": 6,
+    "tags": []
+  },
+  {
+    "name": "Zara Star",
+    "aura": 4,
+    "talent": 9,
+    "influence": 5,
+    "legacy": 8,
+    "tags": []
+  },
+  {
+    "name": "Lila Storm",
+    "aura": 10,
+    "talent": 4,
+    "influence": 5,
+    "legacy": 2,
+    "tags": [
+      "pop star"
+    ]
+  },
+  {
+    "name": "Ezra Vega",
+    "aura": 2,
+    "talent": 3,
+    "influence": 4,
+    "legacy": 7,
+    "tags": [
+      "influencer",
+      "rapper"
+    ]
+  },
+  {
+    "name": "Nova Flame",
+    "aura": 7,
+    "talent": 5,
+    "influence": 2,
+    "legacy": 9,
+    "tags": [
+      "rapper",
+      "DJ"
+    ]
+  },
+  {
+    "name": "Kai Fox",
+    "aura": 9,
+    "talent": 8,
+    "influence": 1,
+    "legacy": 3,
+    "tags": [
+      "rapper",
+      "pop star"
+    ]
+  },
+  {
+    "name": "Nico Echo",
+    "aura": 7,
+    "talent": 1,
+    "influence": 6,
+    "legacy": 2,
+    "tags": [
+      "pop star",
+      "DJ"
+    ]
+  },
+  {
+    "name": "Finn Moon",
+    "aura": 2,
+    "talent": 1,
+    "influence": 9,
+    "legacy": 5,
+    "tags": [
+      "influencer"
+    ]
+  },
+  {
+    "name": "Zara Flame",
+    "aura": 9,
+    "talent": 4,
+    "influence": 8,
+    "legacy": 6,
+    "tags": [
+      "rapper"
+    ]
+  },
+  {
+    "name": "Leo Wave",
+    "aura": 7,
+    "talent": 1,
+    "influence": 10,
+    "legacy": 3,
+    "tags": [
+      "rock star"
+    ]
+  },
+  {
+    "name": "Lila Rider",
+    "aura": 3,
+    "talent": 3,
+    "influence": 2,
+    "legacy": 6,
+    "tags": [
+      "DJ"
+    ]
+  },
+  {
+    "name": "Leo Ray",
+    "aura": 7,
+    "talent": 5,
+    "influence": 9,
+    "legacy": 7,
+    "tags": []
+  },
+  {
+    "name": "Zara Moon",
+    "aura": 9,
+    "talent": 7,
+    "influence": 2,
+    "legacy": 5,
+    "tags": [
+      "pop star"
+    ]
+  },
+  {
+    "name": "Aria Stone",
+    "aura": 5,
+    "talent": 3,
+    "influence": 1,
+    "legacy": 10,
+    "tags": [
+      "rapper"
+    ]
+  },
+  {
+    "name": "Zara Wave",
+    "aura": 7,
+    "talent": 2,
+    "influence": 1,
+    "legacy": 2,
+    "tags": []
+  },
+  {
+    "name": "Kai Rider",
+    "aura": 7,
+    "talent": 10,
+    "influence": 1,
+    "legacy": 7,
+    "tags": []
+  },
+  {
+    "name": "Sky Star",
+    "aura": 7,
+    "talent": 8,
+    "influence": 1,
+    "legacy": 7,
+    "tags": [
+      "pop star"
+    ]
+  },
+  {
+    "name": "Finn Storm",
+    "aura": 1,
+    "talent": 10,
+    "influence": 9,
+    "legacy": 10,
+    "tags": [
+      "rock star"
+    ]
+  },
+  {
+    "name": "Sky Ray",
+    "aura": 8,
+    "talent": 9,
+    "influence": 6,
+    "legacy": 9,
+    "tags": [
+      "influencer"
+    ]
+  },
+  {
+    "name": "Ezra Star",
+    "aura": 2,
+    "talent": 7,
+    "influence": 4,
+    "legacy": 10,
+    "tags": [
+      "rapper"
+    ]
+  },
+  {
+    "name": "Rex Fox",
+    "aura": 6,
+    "talent": 1,
+    "influence": 7,
+    "legacy": 1,
+    "tags": [
+      "rock star"
+    ]
+  },
+  {
+    "name": "Leo Vega",
+    "aura": 3,
+    "talent": 7,
+    "influence": 5,
+    "legacy": 8,
+    "tags": []
+  },
+  {
+    "name": "Kai Vega",
+    "aura": 9,
+    "talent": 4,
+    "influence": 9,
+    "legacy": 3,
+    "tags": []
+  },
+  {
+    "name": "Luna Stone",
+    "aura": 5,
+    "talent": 3,
+    "influence": 9,
+    "legacy": 4,
+    "tags": []
+  },
+  {
+    "name": "Leo Stone",
+    "aura": 8,
+    "talent": 1,
+    "influence": 1,
+    "legacy": 10,
+    "tags": [
+      "rapper"
+    ]
+  },
+  {
+    "name": "Zara Rider",
+    "aura": 2,
+    "talent": 8,
+    "influence": 5,
+    "legacy": 6,
+    "tags": [
+      "DJ",
+      "influencer"
+    ]
+  },
+  {
+    "name": "Lila Storm",
+    "aura": 2,
+    "talent": 6,
+    "influence": 10,
+    "legacy": 5,
+    "tags": [
+      "DJ",
+      "influencer"
+    ]
+  },
+  {
+    "name": "Nova Star",
+    "aura": 9,
+    "talent": 9,
+    "influence": 5,
+    "legacy": 10,
+    "tags": [
+      "rock star",
+      "rapper"
+    ]
+  },
+  {
+    "name": "Mira Vega",
+    "aura": 5,
+    "talent": 9,
+    "influence": 3,
+    "legacy": 2,
+    "tags": []
+  },
+  {
+    "name": "Sky Knight",
+    "aura": 3,
+    "talent": 1,
+    "influence": 4,
+    "legacy": 2,
+    "tags": [
+      "rapper",
+      "DJ"
+    ]
+  },
+  {
+    "name": "Sage Vega",
+    "aura": 8,
+    "talent": 1,
+    "influence": 8,
+    "legacy": 2,
+    "tags": [
+      "pop star",
+      "actor"
+    ]
+  },
+  {
+    "name": "Nova Ray",
+    "aura": 9,
+    "talent": 5,
+    "influence": 8,
+    "legacy": 4,
+    "tags": [
+      "rock star"
+    ]
+  },
+  {
+    "name": "Nova Ray",
+    "aura": 1,
+    "talent": 10,
+    "influence": 2,
+    "legacy": 1,
+    "tags": []
+  },
+  {
+    "name": "Jax Moon",
+    "aura": 1,
+    "talent": 10,
+    "influence": 1,
+    "legacy": 6,
+    "tags": [
+      "rapper",
+      "actor"
+    ]
+  },
+  {
+    "name": "Sky Flame",
+    "aura": 7,
+    "talent": 8,
+    "influence": 3,
+    "legacy": 4,
+    "tags": [
+      "rapper"
+    ]
+  },
+  {
+    "name": "Rex Wave",
+    "aura": 2,
+    "talent": 1,
+    "influence": 6,
+    "legacy": 2,
+    "tags": [
+      "pop star"
+    ]
+  },
+  {
+    "name": "Nico Star",
+    "aura": 3,
+    "talent": 6,
+    "influence": 8,
+    "legacy": 2,
+    "tags": [
+      "DJ"
+    ]
+  },
+  {
+    "name": "Jax Storm",
+    "aura": 8,
+    "talent": 2,
+    "influence": 6,
+    "legacy": 8,
+    "tags": [
+      "actor"
+    ]
+  },
+  {
+    "name": "Ezra Echo",
+    "aura": 9,
+    "talent": 9,
+    "influence": 2,
+    "legacy": 4,
+    "tags": [
+      "pop star"
+    ]
+  },
+  {
+    "name": "Lila Ray",
+    "aura": 2,
+    "talent": 5,
+    "influence": 3,
+    "legacy": 4,
+    "tags": [
+      "rapper"
+    ]
+  },
+  {
+    "name": "Mira Moon",
+    "aura": 4,
+    "talent": 5,
+    "influence": 4,
+    "legacy": 7,
+    "tags": []
+  },
+  {
+    "name": "Nova Blaze",
+    "aura": 1,
+    "talent": 2,
+    "influence": 6,
+    "legacy": 6,
+    "tags": []
+  },
+  {
+    "name": "Luna Flame",
+    "aura": 9,
+    "talent": 7,
+    "influence": 1,
+    "legacy": 4,
+    "tags": [
+      "influencer"
+    ]
+  },
+  {
+    "name": "Sage Knight",
+    "aura": 7,
+    "talent": 7,
+    "influence": 5,
+    "legacy": 6,
+    "tags": []
+  },
+  {
+    "name": "Jax Wave",
+    "aura": 8,
+    "talent": 10,
+    "influence": 9,
+    "legacy": 6,
+    "tags": [
+      "influencer",
+      "DJ"
+    ]
+  },
+  {
+    "name": "Sky Wave",
+    "aura": 9,
+    "talent": 9,
+    "influence": 1,
+    "legacy": 6,
+    "tags": []
+  },
+  {
+    "name": "Ezra Flame",
+    "aura": 10,
+    "talent": 8,
+    "influence": 10,
+    "legacy": 7,
+    "tags": [
+      "actor",
+      "influencer"
+    ]
+  },
+  {
+    "name": "Kai Knight",
+    "aura": 7,
+    "talent": 1,
+    "influence": 9,
+    "legacy": 8,
+    "tags": []
+  },
+  {
+    "name": "Finn Stone",
+    "aura": 8,
+    "talent": 7,
+    "influence": 9,
+    "legacy": 3,
+    "tags": [
+      "rock star",
+      "DJ"
+    ]
+  },
+  {
+    "name": "Finn Wave",
+    "aura": 2,
+    "talent": 2,
+    "influence": 1,
+    "legacy": 7,
+    "tags": [
+      "rock star"
+    ]
+  },
+  {
+    "name": "Nico Ray",
+    "aura": 7,
+    "talent": 4,
+    "influence": 6,
+    "legacy": 10,
+    "tags": [
+      "actor"
+    ]
+  },
+  {
+    "name": "Lila Flame",
+    "aura": 1,
+    "talent": 10,
+    "influence": 5,
+    "legacy": 2,
+    "tags": [
+      "rock star",
+      "pop star"
+    ]
+  },
+  {
+    "name": "Luna Cruz",
+    "aura": 4,
+    "talent": 3,
+    "influence": 7,
+    "legacy": 9,
+    "tags": []
+  },
+  {
+    "name": "Luna Rider",
+    "aura": 1,
+    "talent": 3,
+    "influence": 3,
+    "legacy": 6,
+    "tags": []
+  },
+  {
+    "name": "Luna Wave",
+    "aura": 6,
+    "talent": 6,
+    "influence": 6,
+    "legacy": 7,
+    "tags": [
+      "influencer",
+      "actor"
+    ]
+  },
+  {
+    "name": "Aria Cruz",
+    "aura": 7,
+    "talent": 1,
+    "influence": 7,
+    "legacy": 3,
+    "tags": [
+      "DJ",
+      "rock star"
+    ]
+  },
+  {
+    "name": "Lila Star",
+    "aura": 3,
+    "talent": 8,
+    "influence": 1,
+    "legacy": 2,
+    "tags": []
+  },
+  {
+    "name": "Finn Wave",
+    "aura": 8,
+    "talent": 10,
+    "influence": 3,
+    "legacy": 7,
+    "tags": [
+      "DJ",
+      "pop star"
+    ]
+  },
+  {
+    "name": "Ezra Knight",
+    "aura": 8,
+    "talent": 5,
+    "influence": 3,
+    "legacy": 3,
+    "tags": [
+      "rapper",
+      "pop star"
+    ]
+  },
+  {
+    "name": "Sky Star",
+    "aura": 2,
+    "talent": 5,
+    "influence": 8,
+    "legacy": 5,
+    "tags": [
+      "influencer",
+      "pop star"
+    ]
+  },
+  {
+    "name": "Nico Fox",
+    "aura": 5,
+    "talent": 3,
+    "influence": 6,
+    "legacy": 1,
+    "tags": []
+  },
+  {
+    "name": "Finn Light",
+    "aura": 1,
+    "talent": 9,
+    "influence": 9,
+    "legacy": 7,
+    "tags": [
+      "rock star",
+      "actor"
+    ]
+  },
+  {
+    "name": "Ezra Star",
+    "aura": 5,
+    "talent": 7,
+    "influence": 7,
+    "legacy": 5,
+    "tags": [
+      "influencer",
+      "rock star"
+    ]
+  }
+]

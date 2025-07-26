@@ -1,0 +1,77 @@
+[
+  {
+    "name": "Aura Battle",
+    "stat_options": [
+      "aura"
+    ]
+  },
+  {
+    "name": "Talent Battle",
+    "stat_options": [
+      "talent"
+    ]
+  },
+  {
+    "name": "Influence Battle",
+    "stat_options": [
+      "influence"
+    ]
+  },
+  {
+    "name": "Legacy Battle",
+    "stat_options": [
+      "legacy"
+    ]
+  },
+  {
+    "name": "Aura or Talent",
+    "stat_options": [
+      "aura",
+      "talent"
+    ]
+  },
+  {
+    "name": "Aura or Influence",
+    "stat_options": [
+      "aura",
+      "influence"
+    ]
+  },
+  {
+    "name": "Aura or Legacy",
+    "stat_options": [
+      "aura",
+      "legacy"
+    ]
+  },
+  {
+    "name": "Talent or Influence",
+    "stat_options": [
+      "talent",
+      "influence"
+    ]
+  },
+  {
+    "name": "Talent or Legacy",
+    "stat_options": [
+      "talent",
+      "legacy"
+    ]
+  },
+  {
+    "name": "Influence or Legacy",
+    "stat_options": [
+      "influence",
+      "legacy"
+    ]
+  },
+  {
+    "name": "Ultimate Showdown",
+    "stat_options": [
+      "aura",
+      "talent",
+      "influence",
+      "legacy"
+    ]
+  }
+]
