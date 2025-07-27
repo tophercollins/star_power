@@ -2,7 +2,6 @@ from resources.config import GAME_CONFIG
 from classes.player_classes import HumanPlayer, ComputerPlayer
 from classes.deck_classes import MainDeck, EventDeck
 from classes.board_classes import Board
-from utils.display_utils import display_card_list
 
 class Game:
     def __init__(self):
@@ -52,8 +51,6 @@ class Game:
             player.hand.append(card)
             print(f"{player.name} drew: {card.name}")
 
-        display_card_list(player.hand, title=f"{player.name}'s Hand")
-        display_card_list(player.played_stars, title=f"{player.name}'s Stars in Play")
         player.play_star_from_hand()
         return False
 
@@ -61,9 +58,6 @@ class Game:
         print("\n⚔️ Contest Time!")
 
         human, ai = self.players
-
-        for player in self.players:
-            display_card_list(player.played_stars, title=f"{player.name}'s Stars in Play")
 
         human_star = human.choose_star_for_contest()
         ai_star = ai.choose_star_for_contest()

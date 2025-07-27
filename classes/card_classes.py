@@ -97,6 +97,29 @@ class StatContestEvent(EventCard):
         return winners
 
 
+class FanCard:
+    def __init__(self, name, bonus, condition_tag=None, description=None):
+        self.name = name
+        self.bonus = bonus
+        self.condition_tag = condition_tag.lower() if condition_tag else None
+        self.description = description or self._generate_description()
+
+    def _generate_description(self):
+        if self.condition_tag:
+            article = "an" if self.condition_tag[0].lower() in "aeiou" else "a"
+            return f"Gives +1 if star is {article} {self.condition_tag.title()}"
+        return "Unconditional fan bonus"
+
+    def applies_to(self, star_card):
+        if not self.condition_tag:
+            return True
+        return self.condition_tag in [t.lower() for t in star_card.tags]
+
+    def __str__(self):
+        return f"{self.name} (+{self.bonus}) - {self.description}"
+
+
+
 # Power Cards
 class PowerCard:
     def __init__(self, name, description=""):

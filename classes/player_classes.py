@@ -1,5 +1,4 @@
 import random
-from utils.display_utils import display_card_list
 
 class Player:
     def __init__(self, name, is_human=True):

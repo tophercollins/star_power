@@ -1,4 +1,3 @@
-from utils.display_utils import display_card_list
 
 class Board:
     def __init__(self, players):
@@ -17,7 +16,6 @@ class Board:
     def show_board(self):
         for player in self.players:
             cards = self.cards_in_play.get(player.name, [])
-            display_card_list(cards, title=f"{player.name}'s Stars in Play")
 
     def reset(self):
         """Clear board state if needed between rounds or games."""
