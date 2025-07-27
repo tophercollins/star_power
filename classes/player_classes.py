@@ -4,10 +4,10 @@ class Player:
     def __init__(self, name, is_human=True):
         self.name = name
         self.is_human = is_human
-        self.played_stars = []
-        self.fans = 0  # Replace with a list of FanCards later if needed
+        self.star_cards = []
         self.hand = []
         self.location = []
+        self.attached_fans = []
 
 
     def play_star(self, card):
@@ -15,7 +15,7 @@ class Player:
         Play a StarCard from hand to the board.
         """
         self.hand.remove(card)
-        self.played_stars.append(card)
+        self.star_cards.append(card)
         print(f"{self.name} plays {card.name}")
 
     def play_star_from_hand(self):
@@ -29,10 +29,21 @@ class Player:
         Default behavior: return the most recently played star.
         Override in subclasses.
         """
-        return self.played_stars[-1] if self.played_stars else None
+        return self.star_cards[-1] if self.star_cards else None
+    
+    @property
+    def fans(self):
+        total = 0
+        for star in self.star_cards:
+            for fan in getattr(star, "attached_fans", []):
+                bonus = fan.bonus
+                if fan.condition_tag and fan.applies_to(star):
+                    bonus += 1  # bonus fan match
+                total += bonus
+        return total
 
     def __str__(self):
-        return f"{self.name} | Stars: {[s.name for s in self.played_stars]} | Fans: {self.fans}"
+        return f"{self.name} | Stars: {[s.name for s in self.star_cards]} | Fans: {self.fans}"
 
 
 class HumanPlayer(Player):
@@ -56,15 +67,15 @@ class HumanPlayer(Player):
             print("Invalid choice. Try again.")
 
     def choose_star_for_contest(self):
-        if not self.played_stars:
+        if not self.star_cards:
             return None
 
         while True:
-            choice = input(f"{self.name}, choose a star for the contest (0-{len(self.played_stars)-1}): ")
+            choice = input(f"{self.name}, choose a star for the contest (0-{len(self.star_cards)-1}): ")
             if choice.isdigit():
                 idx = int(choice)
-                if 0 <= idx < len(self.played_stars):
-                    return self.played_stars[idx]
+                if 0 <= idx < len(self.star_cards):
+                    return self.star_cards[idx]
             print("Invalid choice, try again.")
 
 
@@ -80,8 +91,8 @@ class ComputerPlayer(Player):
         self.play_star(card)  # this will remove it inside
             
     def choose_star_for_contest(self):
-        if not self.played_stars:
+        if not self.star_cards:
             return None
-        chosen = random.choice(self.played_stars)
+        chosen = random.choice(self.star_cards)
         print(f"{self.name} chooses {chosen.name} for the contest.")
         return chosen

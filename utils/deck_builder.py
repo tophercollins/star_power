@@ -1,78 +1,82 @@
 import random
+import logging
 from classes.deck_classes import Deck
-from card_loader import load_star_cards, load_event_cards, load_fan_cards
+from utils.card_loader import load_star_cards, load_event_cards, load_fan_cards
 from utils.google_client import google_sheets_client
 from resources.config import GOOGLE_SPREADSHEET_ID, GAME_CONFIG
 
+logger = logging.getLogger(__name__)
+
 def build_main_deck_from_sheet(sheet):
-    all_cards = load_star_cards(sheet)
-    total = GAME_CONFIG["starting_main_deck_size"]
-    selected = random.sample(all_cards, k=min(total, len(all_cards)))
-    return Deck(selected)
+    star_cards = load_star_cards(sheet)
+    total_star_cards = GAME_CONFIG["main_deck_composition"]["star_cards"]
+    selected_cards = random.sample(star_cards, k=min(total_star_cards, len(star_cards)))
+    return Deck(selected_cards)
 
 def build_event_deck_from_sheet(sheet):
-    all_events = load_event_cards(sheet)
+    event_cards = load_event_cards(sheet)
 
-    single_stat = [e for e in all_events if len(e.stat_options) == 1]
-    double_stat = [e for e in all_events if len(e.stat_options) == 2]
-    quad_stat = [e for e in all_events if len(e.stat_options) == 4]
+    single_stat = [e for e in event_cards if len(e.stat_options) == 1]
+    double_stat = [e for e in event_cards if len(e.stat_options) == 2]
+    quad_stat = [e for e in event_cards if len(e.stat_options) == 4]
 
-    event_defs = (
-        single_stat * 4 +
-        double_stat * 2 +
-        quad_stat * 2
+    event_cfg = GAME_CONFIG["event_deck_composition"]
+
+    event_deck = (
+        single_stat * event_cfg["single_stat_contest"] +
+        double_stat * event_cfg["double_stat_contest"] +
+        quad_stat * event_cfg["quad_stat_contest"]
     )
 
-    random.shuffle(event_defs)
-    return Deck(event_defs)
+    random.shuffle(event_deck)
+    return Deck(event_deck)
 
 def build_fan_deck_from_sheet(sheet):
-    all_fans = load_fan_cards(sheet)
+    fan_cards = load_fan_cards(sheet)
+    fan_config = GAME_CONFIG["fan_deck_composition"]
 
-    tag_superfans = [f for f in all_fans if f.bonus == 2 and f.condition_tag]
-    tag_fans = [f for f in all_fans if f.bonus == 1 and f.condition_tag]
-    generic_superfans = [f for f in all_fans if f.bonus == 2 and not f.condition_tag]
-    generic_fans = [f for f in all_fans if f.bonus == 1 and not f.condition_tag]
+    tag_fans = [f for f in fan_cards if f.bonus == 1 and f.condition_tag]
+    tag_superfans = [f for f in fan_cards if f.bonus == 2 and f.condition_tag]
+    generic_fans = [f for f in fan_cards if f.bonus == 1 and not f.condition_tag]
+    generic_superfans = [f for f in fan_cards if f.bonus == 2 and not f.condition_tag]
 
-    deck_cards = []
+    # Create fan deck
+    fan_deck = []
 
-    # 1 of each tag superfan (6 total)
-    used_tags = set()
-    for fan in tag_superfans:
-        if fan.condition_tag not in used_tags:
-            deck_cards.append(fan)
-            used_tags.add(fan.condition_tag)
-        if len(used_tags) == 6:
-            break
-
-    # 2 of each tag fan (12 total)
-    tag_fan_counts = {}
+    # Add tag-based regular fans
     for fan in tag_fans:
-        tag = fan.condition_tag
-        if tag_fan_counts.get(tag, 0) < 2:
-            deck_cards.append(fan)
-            tag_fan_counts[tag] = tag_fan_counts.get(tag, 0) + 1
-        if sum(tag_fan_counts.values()) == 12:
-            break
+        fan_deck.extend([fan] * fan_config["tag_fans"])  # e.g. 2 copies of each tag fan card
 
-    # 2 generic superfans
-    deck_cards.extend(generic_superfans[:2])
+    # Add tag-based superfans
+    for sf in tag_superfans:
+        fan_deck.extend([sf] * fan_config["tag_superfans"])  # e.g. 1 copy of each tag superfan card
 
-    # 12 generic fans
-    deck_cards.extend(generic_fans[:12])
+    # Add generic fans
+    for fan in generic_fans:
+        fan_deck.extend([fan] * fan_config["generic_fans"])  # e.g. 10 copies of each generic fan
 
-    random.shuffle(deck_cards)
-    return Deck(deck_cards)
+    # Add generic superfans
+    for sf in generic_superfans:
+        fan_deck.extend([sf] * fan_config["generic_superfans"])  # e.g. 2 copies of each generic superfan
+
+    random.shuffle(fan_deck)
+    return Deck(fan_deck)
 
 def build_decks():
+    logger.info("Accessing Goolge Sheets client")
     client = google_sheets_client()
     spreadsheet_id = GOOGLE_SPREADSHEET_ID
-    star_sheet = client.open_by_key(spreadsheet_id).worksheet("Star Cards")
-    event_sheet = client.open_by_key(spreadsheet_id).worksheet("Event Cards")
-    fan_sheet = client.open_by_key(spreadsheet_id).worksheet("Fan Cards")
+    spreadsheet = client.open_by_key(spreadsheet_id)
+    star_sheet = spreadsheet.worksheet("Star Cards")
+    event_sheet = spreadsheet.worksheet("Event Cards")
+    fan_sheet = spreadsheet.worksheet("Fan Cards")
 
+    logger.info("Loading main, event, and fan decks from Google sheets")
     main_deck = build_main_deck_from_sheet(star_sheet)
+    logger.info("Main deck built with %d cards", len(main_deck.cards))
     event_deck = build_event_deck_from_sheet(event_sheet)
+    logger.info("Event deck built with %d cards", len(event_deck.cards))
     fan_deck = build_fan_deck_from_sheet(fan_sheet)
+    logger.info("Fan deck built with %d cards", len(fan_deck.cards))
 
     return main_deck, event_deck, fan_deck

@@ -12,6 +12,7 @@ class StarCard:
         self.influence = influence
         self.legacy = legacy
         self.tags = tags or []
+        self.attached_fans = []  # List of FanCard objects
 
     def __str__(self):
         tag_str = f" ({', '.join(self.tags)})" if self.tags else ""

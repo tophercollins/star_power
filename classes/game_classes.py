@@ -1,13 +1,12 @@
 from resources.config import GAME_CONFIG
 from classes.player_classes import HumanPlayer, ComputerPlayer
-from classes.deck_classes import MainDeck, EventDeck
 from classes.board_classes import Board
+from utils.deck_builder import build_decks
 
 class Game:
     def __init__(self):
         self.players = [HumanPlayer("Human 1"), ComputerPlayer("Computer 1")]
-        self.main_deck = MainDeck()
-        self.event_deck = EventDeck()
+        self.main_deck, self.event_deck, self.fan_deck = build_decks()
         self.board = Board(self.players)
         self.discard_pile = []
         self.turn = 1
@@ -51,6 +50,15 @@ class Game:
             player.hand.append(card)
             print(f"{player.name} drew: {card.name}")
 
+        
+        print(f"\n{player.name}'s Hand:")
+        for card in player.hand:
+            print(card)
+
+        print(f"\n{player.name}'s Stars:")
+        for card in player.star_cards:
+            print(f"{card}")
+
         player.play_star_from_hand()
         return False
 
@@ -58,6 +66,11 @@ class Game:
         print("\n⚔️ Contest Time!")
 
         human, ai = self.players
+
+        for player in self.players:
+            print(f"\n{player.name}'s Stars:")
+            for card in player.star_cards:
+                print(card)
 
         human_star = human.choose_star_for_contest()
         ai_star = ai.choose_star_for_contest()
@@ -84,12 +97,22 @@ class Game:
         if len(winners) == 1:
             winner = winners[0]
             winner_player = human if winner == human_star else ai
-            winner_player.fans += 1
-            print(f"\n🏆 {winner_player.name} wins and earns 1 fan!")
+            # Draw a fan card and attach to the winning star
+            fan_card = self.fan_deck.draw()
+            if fan_card:
+                winner.attached_fans.append(fan_card)
+                print(f"\n🏆 {winner_player.name} wins and their star {winner.name} gains a fan: {fan_card.name} (+{fan_card.bonus})!")
+            else:
+                print("\n🏆 {winner_player.name} wins but there are no more fan cards to draw!")
         else:
-            print("\n🤝 It's a tie — both players gain 1 fan!.")
-            for player in self.players:
-                player.fans += 1
+            print("\n🤝 It's a tie — both players gain a fan card for their contesting star!")
+            for star, player in zip([human_star, ai_star], [human, ai]):
+                fan_card = self.fan_deck.draw()
+                if fan_card:
+                    star.attached_fans.append(fan_card)
+                    print(f"{player.name}'s star {star.name} gains a fan: {fan_card.name} (+{fan_card.bonus})")
+                else:
+                    print(f"{player.name} would gain a fan, but the fan deck is empty.")
 
     def end_game(self):
         print("\n🏁 Game Over!")
