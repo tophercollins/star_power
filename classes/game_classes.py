@@ -2,13 +2,15 @@ from resources.config import GAME_CONFIG
 from classes.player_classes import HumanPlayer, ComputerPlayer
 from classes.deck_classes import MainDeck, EventDeck
 from classes.board_classes import Board
+from utils.display_utils import display_card_list
 
 class Game:
     def __init__(self):
-        self.players = [HumanPlayer("You"), ComputerPlayer("AI")]
+        self.players = [HumanPlayer("Human 1"), ComputerPlayer("Computer 1")]
         self.main_deck = MainDeck()
         self.event_deck = EventDeck()
         self.board = Board(self.players)
+        self.discard_pile = []
         self.turn = 1
         self.contest_start_turn = 2
         self.fans_to_win = GAME_CONFIG["fans_to_win"]
@@ -25,6 +27,9 @@ class Game:
     def run(self):
         while True:
             print(f"\n🌀 Turn {self.turn}")
+
+            for player in self.players:
+                print(f"{player.name}'s Fans: {player.fans}")
 
             for player in self.players:
                 if self.play_turn(player):
@@ -47,6 +52,8 @@ class Game:
             player.hand.append(card)
             print(f"{player.name} drew: {card.name}")
 
+        display_card_list(player.hand, title=f"{player.name}'s Hand")
+        display_card_list(player.played_stars, title=f"{player.name}'s Stars in Play")
         player.play_star_from_hand()
         return False
 
@@ -54,6 +61,9 @@ class Game:
         print("\n⚔️ Contest Time!")
 
         human, ai = self.players
+
+        for player in self.players:
+            display_card_list(player.played_stars, title=f"{player.name}'s Stars in Play")
 
         human_star = human.choose_star_for_contest()
         ai_star = ai.choose_star_for_contest()

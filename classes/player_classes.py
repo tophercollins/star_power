@@ -2,11 +2,14 @@ import random
 from utils.display_utils import display_card_list
 
 class Player:
-    def __init__(self, name):
+    def __init__(self, name, is_human=True):
         self.name = name
+        self.is_human = is_human
         self.played_stars = []
         self.fans = 0  # Replace with a list of FanCards later if needed
-        self.hand = []  # in Player.__init__()
+        self.hand = []
+        self.location = []
+
 
     def play_star(self, card):
         """
@@ -40,15 +43,10 @@ class HumanPlayer(Player):
             print("You have no cards to play.")
             return
 
-        print("\n🖐️ Your hand:")
-        display_card_list(self.hand, title="🖐️ Your Hand")      
-        """for i, card in enumerate(self.hand):
-            print(f"{i}: {card}")"""
-
         while True:
             choice = input("Choose a card to play (or press Enter to skip): ")
             if choice == "":
-                print("You chose to skip playing a card.")
+                print(f"{self.name} chose to skip playing a card.")
                 return
             if choice.isdigit():
                 idx = int(choice)
@@ -62,9 +60,6 @@ class HumanPlayer(Player):
         if not self.played_stars:
             return None
 
-        print("\nYour played stars:")
-        display_card_list(self.played_stars, title="Your Stars in Play")
-
         while True:
             choice = input(f"{self.name}, choose a star for the contest (0-{len(self.played_stars)-1}): ")
             if choice.isdigit():
@@ -75,6 +70,9 @@ class HumanPlayer(Player):
 
 
 class ComputerPlayer(Player):
+
+    def __init__(self, name):
+        super().__init__(name, is_human=False)
 
     def play_star_from_hand(self):
         if not self.hand:
