@@ -13,6 +13,7 @@ class StarCard:
         self.legacy = legacy
         self.tags = tags or []
         self.attached_fans = []  # List of FanCard objects
+        self.attached_power_cards = []  # List of PowerCard objects
 
     def __str__(self):
         tag_str = f" ({', '.join(self.tags)})" if self.tags else ""
@@ -23,7 +24,13 @@ class StarCard:
         )
 
     def get_stat(self, stat_name):
-        return getattr(self, stat_name, None)
+        base = getattr(self, stat_name, 0)
+        modifiers = sum(
+            pc.get_stat_modifier(stat_name)
+            for pc in self.attached_power_cards
+            if hasattr(pc, 'get_stat_modifier')
+        )
+        return max(0, base + modifiers)
 
 # Event Cards
 class EventCard:
@@ -73,28 +80,16 @@ class StatContestEvent(EventCard):
         stars: list of StarCard objects
         chosen_stat: required if event type allows choice
         """
-        if not self.stat_options:
-            raise ValueError("No stats defined for contest.")
-
         if self.type == "fixed":
             stat = self.stat_options[0]
         else:
             if not chosen_stat:
                 raise ValueError("Must provide a stat choice for this event.")
-            if chosen_stat.lower() not in self.stat_options:
-                raise ValueError(f"{chosen_stat} is not a valid stat for this contest.")
-            stat = chosen_stat.lower()
+            stat = chosen_stat
 
         max_value = max(star.get_stat(stat) for star in stars)
         winners = [star for star in stars if star.get_stat(stat) == max_value]
 
-        if len(winners) > 1 and game:
-            for player in game.players:
-                for location in player.locations:
-                    if location.overrides_tie():
-                        for winner in winners:
-                            if winner in player.played_stars:
-                                return [winner]  # Player with tie-break location wins
         return winners
 
 
@@ -123,9 +118,10 @@ class FanCard:
 
 # Power Cards
 class PowerCard:
-    def __init__(self, name, description=""):
+    def __init__(self, name, description="", targets_star=False):
         self.name = name
         self.description = description or "No description provided."
+        self.targets_star = targets_star
 
     def play(self, player, game):
         """
@@ -137,113 +133,45 @@ class PowerCard:
     def __str__(self):
         return f"{self.name} - {self.description}"
 
-class DrawCards(PowerCard):
-    def __init__(self, name, num_to_draw, num_to_discard=0, description=None, discard_strategy=None):
-        self.num_to_draw = num_to_draw
-        self.num_to_discard = num_to_discard
-        self.discard_strategy = discard_strategy
-
-        desc = description or f"Draw {num_to_draw} card(s)" + (f", then discard {num_to_discard}" if num_to_discard else "")
-        super().__init__(name=name, description=desc)
-
-    def play(self, player, game):
-        drawn = []
-        for _ in range(self.num_to_draw):
-            card = game.main_deck.draw()
-            if card:
-                player.hand.append(card)
-                drawn.append(card)
-                print(f"{player.name} drew a card: {card}")
-            else:
-                print("Deck is empty. No more cards to draw.")
-                break
-
-        if self.num_to_discard > 0:
-            if self.discard_strategy:
-                cards_to_discard = self.discard_strategy(player)
-            elif getattr(player, 'is_human', False):  # Human player input
-                cards_to_discard = self.prompt_human_discard(player)
-            else:
-                # Fallback for AI: discard first N cards
-                cards_to_discard = player.hand[:self.num_to_discard]
-
-            for card in cards_to_discard:
-                if card in player.hand:
-                    player.hand.remove(card)
-                    game.discard_pile.append(card)
-                    print(f"{player.name} discarded: {card}")
-
-        return drawn
-
-    def prompt_human_discard(self, player):
-        print(f"\n{player.name}, choose {self.num_to_discard} card(s) to discard from your hand:")
-        for i, card in enumerate(player.hand):
-            print(f"{i}: {card}")
-        indices = []
-        while len(indices) < self.num_to_discard:
-            try:
-                choice = int(input(f"Select card #{len(indices)+1}: "))
-                if 0 <= choice < len(player.hand) and choice not in indices:
-                    indices.append(choice)
-                else:
-                    print("Invalid choice.")
-            except ValueError:
-                print("Please enter a number.")
-        return [player.hand[i] for i in indices]
-
 class ModifyStatCard(PowerCard):
-    def __init__(self, name, stat, amount, target_self=True, target_opponent=True, description=None):
-        """
-        stat: which stat to modify (e.g. "aura")
-        amount: positive or negative integer
-        target_self: can this be used on your own stars?
-        target_opponent: can this be used on opponent's stars?
-        """
-        self.stat = stat.lower()
-        self.amount = amount
-        self.target_self = target_self
-        self.target_opponent = target_opponent
+    def __init__(self, name, stat_modifiers: dict, description=None):
+        self.stat_modifiers = {k: v for k, v in stat_modifiers.items() if v != 0}
+        self.targets_star = True
+        desc = description or self._build_description()
+        super().__init__(name, desc)
 
-        sign = "+" if amount > 0 else ""
-        desc = description or f"{sign}{amount} {stat.capitalize()} to a target star"
-        super().__init__(name=name, description=desc)
+    def _build_description(self):
+        return ", ".join([f"{k.capitalize()} {v:+d}" for k, v in self.stat_modifiers.items()]) + " (attach to Star)"
+
+    def get_stat_modifier(self, stat_name):
+        return self.stat_modifiers.get(stat_name, 0)
 
     def play(self, player, game):
-        # Determine eligible targets
-        targets = []
-        if self.target_self:
-            targets += [(player, star) for star in player.played_stars]
-        if self.target_opponent:
-            for p in game.players:
-                if p != player:
-                    targets += [(p, star) for star in p.played_stars]
-
-        if not targets:
-            print("No valid targets for this power card.")
+        valid_targets = player.played_stars
+        if not valid_targets:
+            print("No valid Stars to attach this card to.")
             return
 
-        # Let human choose; AI will choose randomly
+        # Human or AI choose star
         if player.is_human:
-            print(f"\nChoose a target star to modify {self.stat.capitalize()} by {self.amount}:")
-            for i, (_, star) in enumerate(targets):
+            print(f"\nChoose a Star to attach {self.name} to:")
+            for i, star in enumerate(valid_targets):
                 print(f"{i}: {star}")
             while True:
-                choice = input("Enter the number of the star to target: ")
-                if choice.isdigit():
-                    idx = int(choice)
-                    if 0 <= idx < len(targets):
-                        _, target_star = targets[idx]
+                try:
+                    choice = int(input("Enter the number of the Star: "))
+                    if 0 <= choice < len(valid_targets):
+                        target_star = valid_targets[choice]
                         break
-                print("Invalid choice.")
+                except ValueError:
+                    print("Invalid input.")
         else:
-            _, target_star = random.choice(targets)
-            print(f"{player.name} uses {self.name} on {target_star.name}")
+            target_star = random.choice(valid_targets)
 
-        # Apply stat change
-        current_value = target_star.get_stat(self.stat)
-        new_value = max(0, current_value + self.amount)  # Clamp at 0
-        setattr(target_star, self.stat, new_value)
-        print(f"{target_star.name}'s {self.stat.capitalize()} is now {new_value}")
+        target_star.attached_power_cards.append(self)
+        player.hand.remove(self)
+        print(f"{self.name} attached to {target_star.name}.")
+
 
 class LocationPowerCard(PowerCard):
     def __init__(self, name, description):

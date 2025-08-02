@@ -2,6 +2,9 @@
 GAME_CONFIG = {
     "starting_hand_size": 2,
     "cards_drawn_per_turn": 1,
+    "star_cards_per_turn_limit": 1,
+    "power_cards_per_turn_limit": 2,
+    "event_start_turn": 2,    
     "fans_to_win": 10,
     "main_deck_composition": {
         "star_cards": 40  # Total number of StarCards to include in the main deck
