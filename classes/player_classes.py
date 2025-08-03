@@ -59,5 +59,15 @@ class Player:
         target.append(card)
         print(f"{self.name} plays {card.name}")
 
+    def get_fan_bonus(self):
+        """
+        Get fan bonus for this player across all stars.
+        :return: fan_bonus
+        """
+        fan_bonus = 0
+        for star in self.star_cards:
+            fan_bonus += star.get_fan_bonus()
+        return fan_bonus
+
     def __str__(self):
         return f"{self.name} | Stars: {[s.name for s in self.star_cards]} | Locations: {[l.name for l in self.locations]}"

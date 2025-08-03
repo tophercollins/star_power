@@ -2,7 +2,7 @@ import random
 
 # Star Cards
 class StarCard:
-    def __init__(self, name, aura, talent, influence, legacy, tags=None):
+    def __init__(self, name, aura, talent, influence, legacy, tags=[]):
         """
         tags: Optional list like ['rapper', 'pop star']
         """
@@ -11,9 +11,9 @@ class StarCard:
         self.talent = talent
         self.influence = influence
         self.legacy = legacy
-        self.tags = tags or []
-        self.attached_fans = []  # List of FanCard objects
-        self.attached_power_cards = []  # List of PowerCard objects
+        self.tags = tags
+        self.attached_fans = []
+        self.attached_power_cards = []
 
     def __str__(self):
         tag_str = f" ({', '.join(self.tags)})" if self.tags else ""
@@ -31,6 +31,14 @@ class StarCard:
             if hasattr(pc, 'get_stat_modifier')
         )
         return max(0, base + modifiers)
+
+    def get_fan_bonus(self):
+        fan_bonus = 0
+        for fan in self.attached_fans:
+            fan_bonus += fan.bonus
+            if fan.tag in self.tags:
+                fan_bonus += 1
+        return fan_bonus
 
 # Event Cards
 class EventCard:
@@ -94,27 +102,16 @@ class StatContestEvent(EventCard):
 
 
 class FanCard:
-    def __init__(self, name, bonus, condition_tag=None, description=None):
+    def __init__(self, name, bonus, tag=None):
         self.name = name
         self.bonus = bonus
-        self.condition_tag = condition_tag.lower() if condition_tag else None
-        self.description = description or self._generate_description()
-
-    def _generate_description(self):
-        if self.condition_tag:
-            article = "an" if self.condition_tag[0].lower() in "aeiou" else "a"
-            return f"Gives +1 if star is {article} {self.condition_tag.title()}"
-        return "Unconditional fan bonus"
-
-    def applies_to(self, star_card):
-        if not self.condition_tag:
-            return True
-        return self.condition_tag in [t.lower() for t in star_card.tags]
+        self.tag = tag
 
     def __str__(self):
-        return f"{self.name} (+{self.bonus}) - {self.description}"
-
-
+        if self.tag:
+            return f"{self.name} (+{self.bonus}) Gives an extra +1 if star is a {self.condition_tag}"
+        else:
+            return f"{self.name} (+{self.bonus})"
 
 # Power Cards
 class PowerCard:

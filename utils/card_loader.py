@@ -35,15 +35,13 @@ def load_fan_cards(sheet):
 
     for row in rows:
         name = row.get("Name")
-        bonus = int(row.get("Bonus", 1))
-        condition_tag = row.get("ConditionTag", "").strip() or None
-        description = row.get("Description", "").strip() or None
+        bonus = int(row.get("Bonus"))
+        tag = row.get("Tag") or None
 
         fan = FanCard(
             name=name,
             bonus=bonus,
-            condition_tag=condition_tag,
-            description=description
+            tag=tag
         )
         fans.append(fan)
 

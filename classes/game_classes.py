@@ -17,12 +17,12 @@ class Game:
         human_player_count = int(input("Enter number of human players (1-2): ").strip())
         if human_player_count < 1 or human_player_count > 2:
             raise ValueError("Invalid number of players. Must be 1 or 2.")
-        
+
         players = []
         for i in range(human_player_count):
             name = input(f"Enter name for Player {i + 1}: ")
             players.append(Player(name, is_human=True))
-        
+
         computer_player_count = int(input("Enter number of computer players (0-1): ").strip())
         if computer_player_count < 0 or computer_player_count > 1:
             raise ValueError("Invalid number of computer players. Must be 0 or 1.")
@@ -33,7 +33,7 @@ class Game:
             raise ValueError("At least 2 players required.")
 
         return players
-    
+
     def draw_starting_hands(self):
         hand_size = GAME_CONFIG["starting_hand_size"]
         for player in self.players:
@@ -73,6 +73,9 @@ class Game:
         print(f"\n{player.name}'s Stars:")
         for card in player.star_cards:
             print(f"{card}")
+
+        total_fan_bonus = player.get_fan_bonus()
+        print(f"\n{player.name}'s Fans: {total_fan_bonus}")
 
         # Action phase
         
@@ -150,5 +153,8 @@ class Game:
         self.discard_pile.append(event)
 
     def end_game(self):
-        print("\n🏁 Game Over!")
+        print("\nGame Over!")
+        for player in self.players:
+            fan_bonus = player.get_fan_bonus
+            print(f"{player.name}'s Fan Bonus: {fan_bonus}")
         # TODO: Add Game Over logic, e.g. determine winner based on fans

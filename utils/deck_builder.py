@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 def build_main_deck_from_sheet(sheet):
     star_cards = load_star_cards(sheet)
     total_star_cards = GAME_CONFIG["main_deck_composition"]["star_cards"]
-    selected_cards = random.sample(star_cards, k=min(total_star_cards, len(star_cards)))
-    return Deck(selected_cards)
+    main_deck = random.sample(star_cards, k=min(total_star_cards, len(star_cards)))
+    return Deck(main_deck)
 
 def build_event_deck_from_sheet(sheet):
     event_cards = load_event_cards(sheet)
@@ -35,10 +35,10 @@ def build_fan_deck_from_sheet(sheet):
     fan_cards = load_fan_cards(sheet)
     fan_config = GAME_CONFIG["fan_deck_composition"]
 
-    tag_fans = [f for f in fan_cards if f.bonus == 1 and f.condition_tag]
-    tag_superfans = [f for f in fan_cards if f.bonus == 2 and f.condition_tag]
-    generic_fans = [f for f in fan_cards if f.bonus == 1 and not f.condition_tag]
-    generic_superfans = [f for f in fan_cards if f.bonus == 2 and not f.condition_tag]
+    tag_fans = [f for f in fan_cards if f.bonus == 1 and f.tag]
+    tag_superfans = [f for f in fan_cards if f.bonus == 2 and f.tag]
+    generic_fans = [f for f in fan_cards if f.bonus == 1 and not f.tag]
+    generic_superfans = [f for f in fan_cards if f.bonus == 2 and not f.tag]
 
     # Create fan deck
     fan_deck = []
@@ -63,7 +63,7 @@ def build_fan_deck_from_sheet(sheet):
     return Deck(fan_deck)
 
 def build_decks():
-    logger.info("Accessing Goolge Sheets client")
+    logger.info("Accessing Google Sheets client")
     client = google_sheets_client()
     spreadsheet_id = GOOGLE_SPREADSHEET_ID
     spreadsheet = client.open_by_key(spreadsheet_id)

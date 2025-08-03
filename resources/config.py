@@ -12,9 +12,9 @@ GAME_CONFIG = {
 
     "fan_deck_composition": {
         "tag_superfans": 1,             # Number of tag-based SuperFan cards to include PER tag (e.g. 1 'Pop Superfan', 1 'Rapper Superfan', etc.)
-        "tag_fans": 2,                 # Number of regular tag-based Fan cards to include PER tag (e.g. 2 'Pop Fans', 2 'DJ Fans', etc.)
-        "generic_superfans": 2,          # Number of generic (non-tagged) SuperFan card to include
-        "generic_fans": 10               # Number of generic (non-tagged) Fan card to include
+        "tag_fans": 2,                  # Number of regular tag-based Fan cards to include PER tag (e.g. 2 'Pop Fans', 2 'DJ Fans', etc.)
+        "generic_superfans": 2,         # Number of generic (non-tagged) SuperFan card to include
+        "generic_fans": 10              # Number of generic (non-tagged) Fan card to include
     },
 
     "event_deck_composition": {
