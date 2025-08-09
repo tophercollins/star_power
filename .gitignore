@@ -1,1 +1,8 @@
 /resources/google_service_account.json
+ui/__pycache__/game_client.cpython-310.pyc
+utils/__pycache__/card_loader.cpython-310.pyc
+utils/__pycache__/deck_builder.cpython-310.pyc
+resources/__pycache__/config.cpython-310.pyc
+classes/__pycache__/player_classes.cpython-310.pyc
+classes/__pycache__/game_classes.cpython-310.pyc
+classes/__pycache__/card_classes.cpython-310.pyc

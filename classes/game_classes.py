@@ -14,24 +14,9 @@ class Game:
         self.draw_starting_hands()
 
     def setup_players(self):
-        human_player_count = int(input("Enter number of human players (1-2): ").strip())
-        if human_player_count < 1 or human_player_count > 2:
-            raise ValueError("Invalid number of players. Must be 1 or 2.")
-
         players = []
-        for i in range(human_player_count):
-            name = input(f"Enter name for Player {i + 1}: ")
-            players.append(Player(name, is_human=True))
-
-        computer_player_count = int(input("Enter number of computer players (0-1): ").strip())
-        if computer_player_count < 0 or computer_player_count > 1:
-            raise ValueError("Invalid number of computer players. Must be 0 or 1.")
-        for i in range(computer_player_count):
-            players.append(Player(f"AI Player {i + 1}", is_human=False))
-
-        if len(players) < 2:
-            raise ValueError("At least 2 players required.")
-
+        players.append(Player("Toph", is_human=True))
+        players.append(Player(f"Computer", is_human=False))
         return players
 
     def draw_starting_hands(self):

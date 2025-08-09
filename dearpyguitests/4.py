@@ -37,7 +37,7 @@ def move_card(sender, app_data, user_data):
     refresh_zones()
 
 dpg.create_context()
-dpg.create_viewport(title="Card Game - Step 4", width=1000, height=700)
+dpg.create_viewport(title="Star Power", width=1000, height=900)
 
 with dpg.window(label="Card Game", width=1000, height=700):
     with dpg.group(horizontal=True):
