@@ -75,7 +75,18 @@ class GameClient:
         else:
             dpg.add_text("(empty)", parent=hand_row)
 
-    def display_star_card(self, card_view, parent):
+    def on_card_action(self, command: dict) -> None:
+        self.game.dispatch(command)
+        self.refresh_zones()
+
+    def _card_button_callback(self, sender, app_data, user_data):
+        # user_data is the command dict we attached
+        self.on_card_action(user_data)
+
+    def display_star_card(
+            self, 
+            card_view, 
+            parent):
         with dpg.child_window(parent=parent, width=120, height=160, border=True):
             dpg.add_text(card_view.get("name", "Star"))
             dpg.add_spacer(height=5)
@@ -83,3 +94,12 @@ class GameClient:
             dpg.add_text(f"Influence: {card_view.get('influence', 0)}")
             dpg.add_text(f"Talent: {card_view.get('talent', 0)}")
             dpg.add_text(f"Legacy: {card_view.get('legacy', 0)}")
+
+            if card_view.get("show_button", False):
+                dpg.add_spacer(height=10)
+                dpg.add_button(
+                    label=card_view.get("button_label", "Play"),
+                    enabled=True,
+                    callback=self._card_button_callback,
+                    user_data=card_view.get("button_command", "Play"),
+                )
