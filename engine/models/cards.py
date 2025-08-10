@@ -1,9 +1,11 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional
+import uuid
 
 @dataclass
 class StarCard:
+    id: str
     name: str
     aura: int
     talent: int
@@ -16,6 +18,7 @@ class StarCard:
 
 @dataclass
 class EventCard:
+    id: str
     name: str
     description: str = ""
 
@@ -28,6 +31,7 @@ class StatContestEvent(EventCard):
 
 @dataclass
 class FanCard:
+    id: str
     name: str
     bonus: int
     tag: Optional[str] = None
@@ -35,6 +39,7 @@ class FanCard:
 
 @dataclass
 class PowerCard:
+    id: str
     name: str
     description: str = ""
     targets_star: bool = False

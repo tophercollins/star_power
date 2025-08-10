@@ -4,7 +4,7 @@ from engine.rules.star_ops import play_star_from_hand
 
 logger = logging.getLogger(__name__)
 
-def play_card_from_hand(player, hand_index: int, **kwargs):
+def play_card_from_hand(player, hand_index: int):
     if hand_index is None:
         logger.info("Missing hand_index")
         return

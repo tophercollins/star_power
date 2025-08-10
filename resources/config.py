@@ -1,6 +1,6 @@
 
 GAME_CONFIG = {
-    "starting_hand_size": 2,
+    "starting_hand_size": 4,
     "cards_drawn_per_turn": 1,
     "star_cards_per_turn_limit": 1,
     "power_cards_per_turn_limit": 2,

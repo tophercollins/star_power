@@ -74,16 +74,16 @@ class GameClient:
         dpg.add_text(f"{opponent_view.get('name','Opponent')}'s Stars:", parent="board_zone")
         opp_board_row = dpg.add_group(horizontal=True, parent="board_zone")
         
-        for star_view in (opponent_view.get("stars", []) or []):
-            self.display_star_card(star_view, parent=opp_board_row)
+        for card_view in (opponent_view.get("stars", []) or []):
+            self.display_card(card_view, parent=opp_board_row)
 
         dpg.add_spacer(height=10, parent="board_zone")
         dpg.add_text(f"{user_view.get('name','You')}'s Stars:", parent="board_zone")
 
         user_board_row = dpg.add_group(horizontal=True, parent="board_zone")
         
-        for star_view in (user_view.get("stars", []) or []):
-            self.display_star_card(star_view, parent=user_board_row)
+        for card_view in (user_view.get("stars", []) or []):
+            self.display_card(card_view, parent=user_board_row)
 
 
         # Hand
@@ -93,7 +93,7 @@ class GameClient:
         user_hand_cards = user_view.get("hand", []) or []
         if user_hand_cards:
             for card_view in user_hand_cards:
-                self.display_star_card(card_view, parent=hand_row)
+                self.display_card(card_view, parent=hand_row)
         else:
             dpg.add_text("(empty)", parent=hand_row)
 
@@ -105,17 +105,23 @@ class GameClient:
     def _card_button_callback(self, sender, app_data, user_data):
         self.on_card_action(user_data)
 
-    def display_star_card(
+    def display_card(
             self, 
             card_view, 
             parent):
         with dpg.child_window(parent=parent, width=120, height=180, border=True):
-            dpg.add_text(card_view.get("name", "Star"))
+            dpg.add_text(card_view.get("name", "Card"))
             dpg.add_spacer(height=5)
-            dpg.add_text(f"Aura: {card_view.get('aura', 0)}")
-            dpg.add_text(f"Influence: {card_view.get('influence', 0)}")
-            dpg.add_text(f"Talent: {card_view.get('talent', 0)}")
-            dpg.add_text(f"Legacy: {card_view.get('legacy', 0)}")
+
+            card_type = card_view.get("type", "Unknown")
+
+            if card_type == "StarCard":
+                self._render_star_card(card_view)
+            elif card_type in ("PowerCard", "ModifyStatCard"):
+                self._render_power_card(card_view)
+            else:
+                dpg.add_text(f"Type: {card_type}")
+                dpg.add_text("This card type is not supported in the UI.")
 
             if card_view.get("show_button", False):
                 dpg.add_spacer(height=10)
@@ -125,3 +131,17 @@ class GameClient:
                     callback=self._card_button_callback,
                     user_data=card_view.get("button_command", "Play"),
                 )
+    
+    def _render_star_card(self, card_view):
+        dpg.add_text(f"Aura: {card_view.get('aura', 0)}")
+        dpg.add_text(f"Influence: {card_view.get('influence', 0)}")
+        dpg.add_text(f"Talent: {card_view.get('talent', 0)}")
+        dpg.add_text(f"Legacy: {card_view.get('legacy', 0)}")
+
+    def _render_power_card(self, card_view):
+        # desc = (card_view.get("description") or "").strip() or "(Power)"
+        # dpg.add_text(desc, wrap=110)
+        mods = card_view.get("stat_modifiers") or {}
+        for k in ("aura", "talent", "influence", "legacy"):
+            if k in mods:
+                dpg.add_text(f"{k.capitalize()}: {mods[k]:+d}")
