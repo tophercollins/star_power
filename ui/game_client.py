@@ -34,11 +34,13 @@ class GameClient:
             for child in dpg.get_item_children(zone, 1) or []:
                 dpg.delete_item(child)
 
+
         # Player State
         players = self.state["players"]
         user_view = self.state["players"][0]
         opponent_view = self.state["players"][1]
         
+
         # Deck
         main_deck_view = self.state.get("main_deck")
         event_deck_view = self.state.get("event_deck")
@@ -61,9 +63,23 @@ class GameClient:
         if not any([main_deck_view, event_deck_view, fan_deck_view]):
             dpg.add_text("Decks unavailable", parent="deck_zone")
 
+
         # Board
         dpg.add_text("Board:", parent="board_zone")
-        
+
+        opp_board_row = dpg.add_group(horizontal=True, parent="board_zone")
+        dpg.add_text(f"{opponent_view.get('name','Opponent')}'s Stars:", parent=opp_board_row)
+        for star_view in (opponent_view.get("stars", []) or []):
+            self.display_star_card(star_view, parent=opp_board_row)
+
+        dpg.add_spacer(height=10, parent="board_zone")
+
+        user_board_row = dpg.add_group(horizontal=True, parent="board_zone")
+        dpg.add_text(f"{user_view.get('name','You')}'s Stars:", parent=user_board_row)
+        for star_view in (user_view.get("stars", []) or []):
+            self.display_star_card(star_view, parent=user_board_row)
+
+
         # Hand
         user_name = user_view.get("name", "Player")
         dpg.add_text(f"{user_name}'s Hand:", parent="hand_zone")
@@ -74,6 +90,7 @@ class GameClient:
                 self.display_star_card(card_view, parent=hand_row)
         else:
             dpg.add_text("(empty)", parent=hand_row)
+
 
     def on_card_action(self, command: dict) -> None:
         self.game.dispatch(command)
@@ -87,7 +104,7 @@ class GameClient:
             self, 
             card_view, 
             parent):
-        with dpg.child_window(parent=parent, width=120, height=160, border=True):
+        with dpg.child_window(parent=parent, width=120, height=180, border=True):
             dpg.add_text(card_view.get("name", "Star"))
             dpg.add_spacer(height=5)
             dpg.add_text(f"Aura: {card_view.get('aura', 0)}")
