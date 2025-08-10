@@ -5,7 +5,7 @@ from ui.game_client import GameClient
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-    logging.info("Starting Star Power Game")
+    logging.info("Launching Star Power")
 
     players = build_players()
     main_deck, event_deck, fan_deck = build_decks()

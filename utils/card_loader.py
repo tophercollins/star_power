@@ -1,4 +1,11 @@
-from classes.card_classes import StarCard, StatContestEvent, FanCard
+from typing import List
+from engine.models.cards import (
+    StarCard,
+    StatContestEvent,
+    FanCard,
+    PowerCard,            # if you later load power cards
+    ModifyStatCard,       # optional
+)
 
 def load_star_cards(sheet):
     rows = sheet.get_all_records()
@@ -16,6 +23,29 @@ def load_star_cards(sheet):
         )
         stars.append(star)
     return stars
+
+def load_power_cards(sheet):
+    rows = sheet.get_all_records()
+    powers = []
+
+    for row in rows:
+        if row.get("Type") == "Modify Stat":
+            powers.append(
+                ModifyStatCard(
+                    name=row.get("Name", "Unnamed Power"),
+                    description=row.get("Description", ""),
+                    targets_star=True,
+                    stat_modifiers={
+                        "aura": int(row.get("Aura Mod", 0)),
+                        "talent": int(row.get("Talent Mod", 0)),
+                        "influence": int(row.get("Influence Mod", 0)),
+                        "legacy": int(row.get("Legacy Mod", 0)),
+                        }
+                    )
+            )
+        else:
+            pass  # Skip unsupported power card types for now
+    return powers
 
 def load_event_cards(sheet):
     rows = sheet.get_all_records()

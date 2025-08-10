@@ -7,7 +7,8 @@ GAME_CONFIG = {
     "event_start_turn": 2,    
     "fans_to_win": 10,
     "main_deck_composition": {
-        "star_cards": 40  # Total number of StarCards to include in the main deck
+        "star_cards": 20,  # Total number of StarCards to include in the main deck
+        "power_cards": 2   # Number of each power card type to include in the main deck
     },
 
     "fan_deck_composition": {

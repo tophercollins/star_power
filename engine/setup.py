@@ -4,12 +4,16 @@ from engine.models.player import Player
 from engine.models.deck import Deck
 from engine.rules.deck_ops import draw_card
 from utils.deck_builder import build_decks as deck_builder
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def build_players() -> List[Player]:
     """
     Create the player list (data only).
     """
+    logger.info("Building players")
     return [
         Player(name="Toph", is_human=True),
         Player(name="Computer", is_human=False),
@@ -21,6 +25,7 @@ def build_decks() -> Tuple[Deck, Deck, Deck]:
     Build the three decks from the deck builder and wrap them
     in our model Deck class.
     """
+    logger.info("Building decks")
     main, event, fan = deck_builder()
 
     main_deck = Deck(name=getattr(main, "name", "Main Deck"),
@@ -37,6 +42,7 @@ def deal_starting_hands(players: List[Player], main_deck: Deck) -> None:
     Deal starting hands to players.
     """
     hand_size = GAME_CONFIG["starting_hand_size"]
+    logger.info(f"Dealing starting hands of size: {hand_size}")
     for player in players:
         for _ in range(hand_size):
             card = draw_card(main_deck)

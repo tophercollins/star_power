@@ -1,11 +1,15 @@
 import random
 from typing import List, Any
 from engine.models.deck import Deck
+import logging
+
+logger = logging.getLogger(__name__)
 
 def shuffle_deck(deck: Deck) -> None:
     random.shuffle(deck.cards)
 
 def draw_card(deck: Deck) -> Any | None:
+    logger.info(f"Drawing card from {deck.name} with {len(deck.cards)} cards")
     if not deck.cards:
         return None
     return deck.cards.pop(0)

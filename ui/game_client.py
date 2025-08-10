@@ -1,7 +1,11 @@
 import dearpygui.dearpygui as dpg
+import logging
+
+logger = logging.getLogger(__name__)
 
 class GameClient:
     def __init__(self, game):
+        logger.info("Initializing GameClient")
         self.game = game
         dpg.create_context()
         dpg.create_viewport(title="Star Power", width=1025, height=900)
@@ -66,16 +70,18 @@ class GameClient:
 
         # Board
         dpg.add_text("Board:", parent="board_zone")
-
+        
+        dpg.add_text(f"{opponent_view.get('name','Opponent')}'s Stars:", parent="board_zone")
         opp_board_row = dpg.add_group(horizontal=True, parent="board_zone")
-        dpg.add_text(f"{opponent_view.get('name','Opponent')}'s Stars:", parent=opp_board_row)
+        
         for star_view in (opponent_view.get("stars", []) or []):
             self.display_star_card(star_view, parent=opp_board_row)
 
         dpg.add_spacer(height=10, parent="board_zone")
+        dpg.add_text(f"{user_view.get('name','You')}'s Stars:", parent="board_zone")
 
         user_board_row = dpg.add_group(horizontal=True, parent="board_zone")
-        dpg.add_text(f"{user_view.get('name','You')}'s Stars:", parent=user_board_row)
+        
         for star_view in (user_view.get("stars", []) or []):
             self.display_star_card(star_view, parent=user_board_row)
 
@@ -97,7 +103,6 @@ class GameClient:
         self.refresh_zones()
 
     def _card_button_callback(self, sender, app_data, user_data):
-        # user_data is the command dict we attached
         self.on_card_action(user_data)
 
     def display_star_card(
