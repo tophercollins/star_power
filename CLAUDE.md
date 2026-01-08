@@ -4,18 +4,844 @@
 **Project**: Star Power - A card-based strategy game
 **Language**: Python 3.10+
 **UI Framework**: DearPyGui
+**Status**: Active development - core systems functional, gameplay loop incomplete
 
 ---
 
-## Project Overview
+## Table of Contents
 
-Star Power is a turn-based card game where players compete by playing Star Cards, Power Cards, and collecting Fans through Event contests. The game features:
+1. [What is Star Power?](#what-is-star-power) - Game mechanics and rules
+2. [How Star Power Works](#how-star-power-works) - Technical implementation
+3. [Architecture Philosophy](#architecture-philosophy)
+4. [Directory Structure](#directory-structure)
+5. [Key Files Reference](#key-files-reference)
+6. [Development Conventions](#development-conventions)
+7. [Common Workflows](#common-workflows)
+8. [Important Notes for AI Assistants](#important-notes-for-ai-assistants)
 
-- 2 players (Human vs Computer)
-- 4 stat types: Aura, Talent, Influence, Legacy
-- 3 deck types: Main Deck (Stars + Powers), Event Deck (Stat Contests), Fan Deck (Victory Points)
-- Win condition: First to 10 fans wins
-- Card data sourced from Google Sheets for easy non-developer editing
+---
+
+## What is Star Power?
+
+### Game Concept
+
+Star Power is a **competitive card game** where two players build their celebrity empires by playing Star Cards (celebrities/influencers), enhancing them with Power Cards (modifiers), competing in Events (stat contests), and collecting Fans (victory points).
+
+**Core Gameplay Loop** (designed):
+1. Players play Star Cards from their hand onto the board
+2. Players enhance their Stars with Power Cards (stat modifiers, locations, etc.)
+3. Each turn triggers an Event that creates a stat contest
+4. Players choose which of their Stars compete using which stat
+5. Winner of the contest draws Fan cards
+6. Tagged Fans give bonus points when attached to Stars with matching tags
+7. First player to accumulate 10 Fan points wins
+
+**Current Implementation Status**: ⚠️ Partial
+- ✅ Star Cards can be played to the board
+- ❌ Power Cards cannot be played yet (stub only)
+- ❌ Events do not trigger
+- ❌ Fan distribution system not implemented
+- ❌ Turn progression system not implemented
+- ❌ Win condition not checked
+
+---
+
+### The Four Stats
+
+Every Star Card has four numerical stats that represent different aspects of celebrity power:
+
+| Stat | Meaning | Used For |
+|------|---------|----------|
+| **Aura** | Presence, charisma, mystique | Contests about public image |
+| **Talent** | Skill, artistic ability | Contests about performance |
+| **Influence** | Reach, connections, impact | Contests about social power |
+| **Legacy** | Longevity, cultural impact | Contests about lasting fame |
+
+**Example Star Card**:
+```
+Name: "Drake"
+Aura: 8
+Talent: 7
+Influence: 9
+Legacy: 6
+Tags: ["Rapper", "Pop"]
+```
+
+---
+
+### Card Types Explained
+
+#### 1. Star Cards (Primary Cards)
+
+**Purpose**: The main cards you play to the board. These represent celebrities/influencers.
+
+**Properties**:
+- **Name**: Celebrity/influencer name
+- **4 Stats**: Aura, Talent, Influence, Legacy (integers 1-10)
+- **Tags**: Categories like "Rapper", "Pop", "DJ", "Actor" (list of strings)
+- **Attached Fans**: Fan cards attached to this star (list, initially empty)
+- **Attached Power Cards**: Power cards modifying this star (list, initially empty)
+
+**Gameplay**:
+- Drawn from Main Deck
+- Played from hand to your board area (one per turn limit, configured but not enforced)
+- Remain on board for the entire game
+- Used to compete in Events
+
+**Current Implementation**: ✅ **FULLY FUNCTIONAL**
+- Can be played from hand via UI button
+- Displays on board with all 4 stats visible
+- Tags loaded from Google Sheets
+
+---
+
+#### 2. Power Cards (Modifier Cards)
+
+**Purpose**: Enhance or modify Star Cards on the board.
+
+**Types**:
+
+**A. ModifyStatCard** (subclass of PowerCard)
+- **Purpose**: Permanently modify a Star's stats
+- **Properties**:
+  - Name, Description
+  - `stat_modifiers`: Dict mapping stat names to integer modifiers
+  - `targets_star`: True (requires targeting a Star on your board)
+- **Example**:
+  ```
+  Name: "Record Deal"
+  stat_modifiers: {"talent": +2, "influence": +1}
+  ```
+- **Intended Behavior**: Click Power in hand → Select Star on board → Stats increase permanently
+
+**B. LocationPowerCard** (subclass of PowerCard)
+- **Purpose**: Represent locations that provide bonuses
+- **Properties**: Name, Description (details TBD)
+- **Status**: ⚠️ Stub only - no properties defined yet
+
+**Gameplay** (designed but not implemented):
+- Drawn from Main Deck (2 copies of each Power Card type)
+- Played from hand by targeting a Star Card on your board
+- Two Power Cards per turn limit (configured but not enforced)
+- Permanently attached to the targeted Star
+
+**Current Implementation**: ❌ **NOT FUNCTIONAL**
+- Power cards appear in hand
+- "Play" button only shows if you have a Star on board
+- Clicking "Play" does nothing (logs "not implemented")
+- `engine/rules/power_ops.py` is empty (1 line only)
+
+---
+
+#### 3. Event Cards (Contest Cards)
+
+**Purpose**: Trigger stat contests between players to win Fans.
+
+**Type**: StatContestEvent (subclass of EventCard)
+
+**Properties**:
+- **Name**: Event name (e.g., "Rap Battle", "Award Show")
+- **Description**: Flavor text
+- **stat_options**: List of stats players can choose from (1, 2, or 4 stats)
+- **contest_type**: "custom" (string, purpose unclear)
+
+**Event Types by Stat Options**:
+| Type | Stat Options | Player Choice | Deck Count |
+|------|--------------|---------------|------------|
+| **Single** | ["talent"] | No choice, must use Talent | 4 cards |
+| **Double** | ["aura", "influence"] | Choose Aura OR Influence | 2 cards |
+| **Quad** | ["aura", "talent", "influence", "legacy"] | Choose any one stat | 2 cards |
+
+**Intended Gameplay** (designed):
+1. At start of turn (after turn 2), flip top Event Card
+2. Each player selects which Star to use and which stat to compete with
+3. Compare the chosen stat values (including Power Card modifiers)
+4. Winner draws from Fan Deck
+5. Event Card goes to discard pile
+
+**Current Implementation**: ❌ **NOT IMPLEMENTED**
+- Event Deck is built and loaded (8 total cards)
+- Events are never drawn or triggered
+- No UI for event resolution
+- No contest resolution logic exists
+
+---
+
+#### 4. Fan Cards (Victory Point Cards)
+
+**Purpose**: Victory points. First player to 10 Fan points wins.
+
+**Properties**:
+- **Name**: Fan type (e.g., "Pop Fans", "Generic Superfan")
+- **Bonus**: Victory points (1 = regular fan, 2 = superfan)
+- **Tag**: Optional category that matches Star tags (e.g., "Rapper", "Pop")
+
+**Fan Types**:
+| Type | Bonus | Tag | How Many in Deck |
+|------|-------|-----|------------------|
+| **Generic Fan** | 1 | None | 10 copies |
+| **Generic Superfan** | 2 | None | 2 copies |
+| **Tagged Fan** | 1 | Yes (e.g., "Rapper") | 2 copies per tag |
+| **Tagged Superfan** | 2 | Yes (e.g., "Pop") | 1 copy per tag |
+
+**Intended Gameplay** (designed):
+1. Win an Event contest → Draw Fan card from Fan Deck
+2. Attach Fan to one of your Stars
+3. If Fan has matching tag with Star, bonus points may increase (mechanic TBD)
+4. Total your Fan points across all Stars
+5. First to 10 points wins
+
+**Current Implementation**: ❌ **NOT IMPLEMENTED**
+- Fan Deck is built and loaded (~20+ cards based on tags in Google Sheets)
+- Fans are never awarded
+- No attachment mechanism exists
+- No victory point counting
+
+---
+
+### Game Setup (Designed)
+
+**Players**: 2
+- Player 1: "Toph" (human)
+- Player 2: "Computer" (AI, no decision-making implemented)
+
+**Decks Built**:
+1. **Main Deck**:
+   - 20 Star Cards (random sample from Google Sheets)
+   - 2 copies of each Power Card type from Google Sheets
+   - Total: ~20-30 cards depending on Google Sheets data
+   - Shuffled
+
+2. **Event Deck**:
+   - 4 single-stat contest cards
+   - 2 double-stat contest cards
+   - 2 quad-stat contest cards
+   - Total: 8 cards
+   - Shuffled
+
+3. **Fan Deck**:
+   - Based on GAME_CONFIG composition ratios
+   - Generic + tagged fans based on tags in Star Cards sheet
+   - Total: 20-40 cards depending on unique tags
+   - Shuffled
+
+**Starting State**:
+- Each player draws 4 cards from Main Deck
+- Turn counter starts at 1
+- All board areas empty
+- Event/Fan decks unused
+
+---
+
+### Game Rules (Designed vs Implemented)
+
+| Rule | Configuration | Implementation Status |
+|------|---------------|----------------------|
+| Starting hand size | 4 cards | ✅ Implemented |
+| Cards drawn per turn | 1 card | ❌ No turn progression |
+| Star cards per turn limit | 1 | ❌ Not enforced |
+| Power cards per turn limit | 2 | ❌ Not enforced |
+| Event trigger turn | Turn 2+ | ❌ Events never trigger |
+| Victory condition | 10 fans | ❌ Not checked |
+
+**GAME_CONFIG** (resources/config.py):
+```python
+{
+    "starting_hand_size": 4,
+    "cards_drawn_per_turn": 1,
+    "star_cards_per_turn_limit": 1,
+    "power_cards_per_turn_limit": 2,
+    "event_start_turn": 2,
+    "fans_to_win": 10,
+    "main_deck_composition": {"star_cards": 20, "power_cards": 2},
+    "fan_deck_composition": {...},
+    "event_deck_composition": {...}
+}
+```
+
+---
+
+### Current Playable Experience
+
+**What You Can Do** (as of 2026-01-08):
+1. Launch game via `python main.py`
+2. See your starting hand of 4 cards (mix of Stars and Powers)
+3. Click "Play" button on Star Cards to move them to your board
+4. See opponent's (Computer) empty board
+5. View deck sizes in left panel
+6. Star Cards display all 4 stats when on board or in hand
+
+**What You Cannot Do**:
+- Play Power Cards (button appears but does nothing)
+- Progress turns
+- Draw additional cards
+- Trigger events
+- Win fans
+- Win the game
+- See AI opponent make decisions
+
+**Current State**: The game is essentially a **Star Card placement sandbox**. The core architecture is solid, but gameplay loop is incomplete.
+
+---
+
+## How Star Power Works
+
+### Technical Architecture Summary
+
+Star Power uses a **command-driven architecture** where:
+1. UI (DearPyGui) renders game state as widgets
+2. User clicks buttons, which send commands to GameEngine
+3. GameEngine dispatches commands to rule functions
+4. Rule functions mutate Player/Deck dataclass objects
+5. GameEngine returns a state snapshot (JSON)
+6. UI re-renders based on new state
+
+**Key Pattern**: **Unidirectional data flow**
+```
+User Input → Command → Dispatcher → Rule Function → State Mutation → Snapshot → UI Render
+```
+
+---
+
+### State Management
+
+**Centralized State** (GameEngine class):
+```python
+class GameEngine:
+    players: List[Player]        # 2 Player objects
+    main_deck: Deck              # Star + Power cards
+    event_deck: Deck             # Event cards
+    fan_deck: Deck               # Fan cards
+    turn: int                    # Current turn number
+    pending_card: Optional[Dict] # Power card awaiting target (unused)
+```
+
+**Player State** (Player dataclass):
+```python
+@dataclass
+class Player:
+    name: str                    # "Toph" or "Computer"
+    is_human: bool               # True for player 1, False for player 2
+    hand: List[Card]             # Cards in hand
+    star_cards: List[StarCard]   # Stars on board
+    locations: List[Any]         # Location cards (unused)
+```
+
+**State Never Duplicated**: Only one source of truth (GameEngine). UI never stores game state, only renders it.
+
+---
+
+### Command System
+
+**Command Structure**:
+```python
+{
+    "type": "PLAY_CARD",
+    "payload": {
+        "player": 0,        # Player index (0 = human, 1 = computer)
+        "hand_index": 2     # Position in player's hand
+    }
+}
+```
+
+**Command Flow**:
+1. UI button clicked → `GameClient._card_button_callback()`
+2. Callback extracts command from button's `user_data`
+3. Calls `GameClient.on_card_action(command)`
+4. Calls `GameEngine.dispatch(command)`
+5. Dispatcher validates payload, routes to appropriate rule function
+6. Rule function mutates state
+7. `dispatch()` returns `snapshot()` (full game state as JSON)
+8. UI calls `refresh_zones()` to re-render
+
+**Currently Supported Commands**:
+- `PLAY_CARD`: Play a card from hand (only works for Star Cards)
+
+**Designed But Not Implemented**:
+- `END_TURN`: Progress to next turn, draw cards, trigger events
+- `SELECT_TARGET`: Target a Star Card for Power Card attachment
+- `CHOOSE_STAT`: Choose stat for event contest
+- `CHOOSE_STAR`: Choose which Star competes in event
+
+---
+
+### Rendering System (Serialization)
+
+**Problem**: UI needs JSON, but game state is Python objects.
+
+**Solution**: Serializer functions convert dataclass objects → dicts.
+
+**Example - Star Card Serialization**:
+```python
+# Input: StarCard object
+StarCard(
+    id="abc123",
+    name="Drake",
+    aura=8, talent=7, influence=9, legacy=6,
+    tags=["Rapper", "Pop"],
+    attached_fans=[], attached_power_cards=[]
+)
+
+# Output: Dict (via star_card_view())
+{
+    "id": "abc123",
+    "type": "StarCard",
+    "name": "Drake",
+    "aura": 8,
+    "talent": 7,
+    "influence": 9,
+    "legacy": 6
+}
+```
+
+**Example - Player Serialization with UI Logic**:
+```python
+# Input: Player object + index
+Player(name="Toph", hand=[star_card, power_card], star_cards=[star1, star2])
+
+# Output: Dict with UI button data (via player_view())
+{
+    "name": "Toph",
+    "hand": [
+        {
+            "id": "xyz789",
+            "type": "StarCard",
+            "name": "Drake",
+            "aura": 8, "talent": 7, "influence": 9, "legacy": 6,
+            "show_button": True,  # Human player
+            "button_label": "Play",
+            "button_command": {"type": "PLAY_CARD", "payload": {"player": 0, "hand_index": 0}}
+        },
+        {
+            "id": "def456",
+            "type": "ModifyStatCard",
+            "name": "Record Deal",
+            "stat_modifiers": {"talent": 2, "influence": 1},
+            "targets_star": True,
+            "show_button": True,  # Only if player has Stars on board
+            "button_label": "Play",
+            "button_command": {"type": "PLAY_CARD", "payload": {"player": 0, "hand_index": 1}}
+        }
+    ],
+    "stars": [star_card_view(star1), star_card_view(star2)]
+}
+```
+
+**Key Insight**: Serializers embed UI button logic (show_button, button_command). This keeps UI code simple - it just renders what the serializer provides.
+
+---
+
+### Complete Execution Flow: Playing a Star Card
+
+**User Action**: Click "Play" button on a Star Card in hand
+
+**Step-by-Step Code Execution**:
+
+1. **UI Event Handler** (`ui/game_client.py:105-106`)
+   ```python
+   def _card_button_callback(self, sender, app_data, user_data):
+       self.on_card_action(user_data)  # user_data is the command dict
+   ```
+
+2. **Command Dispatch Trigger** (`ui/game_client.py:101-103`)
+   ```python
+   def on_card_action(self, command: dict) -> None:
+       self.game.dispatch(command)  # Send command to engine
+       self.refresh_zones()          # Re-render UI
+   ```
+
+3. **Engine Receives Command** (`engine/game_engine.py:19-50`)
+   ```python
+   def dispatch(self, command: dict) -> Dict[str, Any]:
+       action = command.get("type")              # "PLAY_CARD"
+       payload = command.get("payload", {})       # {"player": 0, "hand_index": 2}
+
+       if action == "PLAY_CARD":
+           player_index = payload.get("player", 0)
+           hand_index = payload.get("hand_index")
+
+           if 0 <= player_index < len(self.players):
+               player = self.players[player_index]
+
+               # BUG: Should check card type, not player type
+               # This condition is always False - logic error
+               if isinstance(player, StarCard):
+                   play_card_from_hand(player, hand_index)
+               # ... Power card handling (not reached)
+
+       return self.snapshot()  # Return full game state
+   ```
+
+4. **Rule Dispatcher** (`engine/rules/common_ops.py:7-31`)
+   ```python
+   def play_card_from_hand(player, hand_index: int):
+       # Validate hand_index
+       if hand_index is None or hand_index < 0 or hand_index >= len(player.hand):
+           logger.info("Invalid hand index")
+           return
+
+       card = player.hand[hand_index]  # Get the actual card
+
+       if isinstance(card, StarCard):
+           return play_star_from_hand(player, hand_index)
+       elif isinstance(card, PowerCard):
+           logger.info("Playing PowerCard not implemented yet")
+           return
+       else:
+           logger.info(f"Unknown card type: {type(card).__name__}")
+   ```
+
+5. **Star Card Play Logic** (`engine/rules/star_ops.py:6-14`)
+   ```python
+   def play_star_from_hand(player, hand_index: int):
+       card = player.hand[hand_index]
+
+       # Type check (redundant but safe)
+       if not isinstance(card, StarCard):
+           logger.info(f"Cannot play non-star card: {card.name}")
+           return
+
+       # Mutate player state
+       player.hand.pop(hand_index)        # Remove from hand
+       player.star_cards.append(card)      # Add to board
+
+       logger.info(f"{player.name} played {card.name}")
+   ```
+
+6. **State Snapshot** (`engine/game_engine.py:52-59`)
+   ```python
+   def snapshot(self) -> Dict[str, Any]:
+       return {
+           "turn": self.turn,
+           "players": [player_view(player, player_index=i)
+                       for i, player in enumerate(self.players)],
+           "main_deck": deck_view(self.main_deck),
+           "event_deck": deck_view(self.event_deck),
+           "fan_deck": deck_view(self.fan_deck),
+       }
+   ```
+
+7. **UI Refresh** (`ui/game_client.py:33-99`)
+   ```python
+   def refresh_zones(self):
+       self.state = self.game.snapshot()  # Get fresh state
+
+       # Clear all UI widgets
+       for zone in ("deck_zone", "hand_zone", "board_zone"):
+           for child in dpg.get_item_children(zone, 1) or []:
+               dpg.delete_item(child)
+
+       # Re-render everything from state
+       user_view = self.state["players"][0]
+       opponent_view = self.state["players"][1]
+
+       # Render decks (deck_zone)
+       # Render boards (board_zone) - shows stars
+       # Render hand (hand_zone) - shows cards with buttons
+   ```
+
+**Result**: Star Card moves from hand to board, UI updates to reflect new state.
+
+**Known Bug**: `game_engine.py:30` checks `isinstance(player, StarCard)` instead of `isinstance(card, StarCard)`. This condition is always False, so the actual execution path goes through `common_ops.py:play_card_from_hand()` which correctly checks card type. The bug is harmless but shows incomplete refactoring.
+
+---
+
+### Data Loading Flow: Google Sheets → Game Objects
+
+**Initialization Sequence** (`main.py:6-19`):
+
+```python
+# 1. Build players (simple)
+players = build_players()  # Returns [Player("Toph"), Player("Computer")]
+
+# 2. Build decks (complex - loads from Google Sheets)
+main_deck, event_deck, fan_deck = build_decks()
+
+# 3. Deal starting hands (4 cards each from main_deck)
+deal_starting_hands(players, main_deck)
+
+# 4. Create game engine
+engine = GameEngine(players=players, decks=(main_deck, event_deck, fan_deck))
+
+# 5. Launch UI (blocks until window closed)
+GameClient(engine)
+```
+
+**Detailed Deck Building** (`utils/deck_builder.py:70-87`):
+
+```python
+def build_decks():
+    # 1. Authenticate with Google Sheets
+    client = google_sheets_client()  # Service account auth
+    spreadsheet = client.open_by_key(GOOGLE_SPREADSHEET_ID)
+
+    # 2. Get worksheets by name
+    star_sheet = spreadsheet.worksheet("Star Cards")
+    power_sheet = spreadsheet.worksheet("Power Cards")
+    event_sheet = spreadsheet.worksheet("Event Cards")
+    fan_sheet = spreadsheet.worksheet("Fan Cards")
+
+    # 3. Build each deck
+    main_deck = build_main_deck_from_sheet(star_sheet, power_sheet)
+    event_deck = build_event_deck_from_sheet(event_sheet)
+    fan_deck = build_fan_deck_from_sheet(fan_sheet)
+
+    return main_deck, event_deck, fan_deck
+```
+
+**Star Card Loading** (`utils/card_loader.py:14-30`):
+
+```python
+def load_star_cards(sheet):
+    rows = sheet.get_all_records()  # Returns list of dicts (header row = keys)
+    stars = []
+
+    for row in rows:
+        stars.append(
+            StarCard(
+                id=str(uuid.uuid4()),           # Generate unique ID
+                name=row["Name"],                # Column "Name"
+                aura=int(row["Aura"]),          # Column "Aura"
+                talent=int(row["Talent"]),      # etc.
+                influence=int(row["Influence"]),
+                legacy=int(row["Legacy"]),
+                tags=[t.strip() for t in row.get("Tags", "").split(",") if t.strip()]
+            )
+        )
+    return stars
+```
+
+**Google Sheets Expected Format**:
+
+| Name | Aura | Talent | Influence | Legacy | Tags |
+|------|------|--------|-----------|--------|------|
+| Drake | 8 | 7 | 9 | 6 | Rapper, Pop |
+| Taylor Swift | 9 | 8 | 10 | 9 | Pop |
+| Kendrick Lamar | 7 | 10 | 8 | 8 | Rapper |
+
+**Main Deck Assembly** (`utils/deck_builder.py:12-24`):
+
+```python
+def build_main_deck_from_sheet(star_sheet, power_sheet):
+    # Load ALL cards from sheets
+    star_cards = load_star_cards(star_sheet)      # e.g., 30 total stars
+    power_cards = load_power_cards(power_sheet)   # e.g., 5 power types
+
+    # Sample stars based on config
+    total_star_cards = GAME_CONFIG["main_deck_composition"]["star_cards"]  # 20
+    picked_star_cards = random.sample(star_cards, k=min(20, len(star_cards)))
+
+    # Duplicate each power card based on config
+    total_power_cards = GAME_CONFIG["main_deck_composition"]["power_cards"]  # 2
+    picked_power_cards = []
+    for card in power_cards:  # For each power type
+        picked_power_cards.extend([card] * 2)  # Add 2 copies
+
+    # Combine and shuffle
+    picked_cards = picked_star_cards + picked_power_cards
+    deck = Deck(name="Main Deck", cards=picked_cards)
+    shuffle_deck(deck)
+    return deck
+```
+
+**Result**: Main Deck contains ~20 unique Star Cards + 10 Power Cards (5 types × 2 copies each), shuffled.
+
+---
+
+### UI Architecture: DearPyGui Layout
+
+**Window Structure** (`ui/game_client.py:20-31`):
+
+```
+┌─────────────────────────────────────────────────────┐
+│ Star Power                                    [X]   │ <- Viewport (1025x900)
+├─────────────────────────────────────────────────────┤
+│ ┌──────────┬───────────────────────────────────┐   │
+│ │          │                                   │   │
+│ │  Deck    │         Board Zone               │   │ <- Top Row (580px high)
+│ │  Zone    │  Opponent Stars  │  Your Stars   │   │
+│ │ (200px)  │      (top half)  │  (bot half)   │   │
+│ │          │                                   │   │
+│ └──────────┴───────────────────────────────────┘   │
+│ ┌─────────────────────────────────────────────┐   │
+│ │             Hand Zone                        │   │ <- Bottom Row (230px high)
+│ │  [Star Card] [Star Card] [Power Card]        │   │
+│ │   [Play]      [Play]        [Play]           │   │
+│ └─────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────┘
+```
+
+**Code Structure**:
+```python
+with dpg.window(label="Star Power", tag="root"):
+    with dpg.group(horizontal=True):
+        with dpg.child_window(tag="deck_zone", width=200, height=580):
+            pass  # Populated in refresh_zones()
+        with dpg.child_window(tag="board_zone", width=-1, height=580):
+            pass  # -1 = fill remaining width
+    with dpg.child_window(tag="hand_zone", height=230):
+        pass
+```
+
+**Card Rendering** (`ui/game_client.py:108-147`):
+
+```python
+def display_card(self, card_view, parent):
+    # Create 120x180 card widget
+    with dpg.child_window(parent=parent, width=120, height=180, border=True):
+        dpg.add_text(card_view.get("name", "Card"))  # Card name
+        dpg.add_spacer(height=5)
+
+        # Render based on type
+        if card_view.get("type") == "StarCard":
+            self._render_star_card(card_view)  # Show 4 stats
+        elif card_view.get("type") in ("PowerCard", "ModifyStatCard"):
+            self._render_power_card(card_view)  # Show stat modifiers
+
+        # Add button if allowed
+        if card_view.get("show_button", False):
+            dpg.add_button(
+                label=card_view.get("button_label", "Play"),
+                callback=self._card_button_callback,
+                user_data=card_view.get("button_command")  # Command dict
+            )
+```
+
+**Star Card Display**:
+```
+┌──────────────┐
+│ Drake        │
+│              │
+│ Aura: 8      │
+│ Influence: 9 │
+│ Talent: 7    │
+│ Legacy: 6    │
+│              │
+│   [Play]     │
+└──────────────┘
+```
+
+**Power Card Display**:
+```
+┌──────────────┐
+│ Record Deal  │
+│              │
+│ Talent: +2   │
+│ Influence: +1│
+│              │
+│              │
+│   [Play]     │
+└──────────────┘
+```
+
+---
+
+### Critical Code Paths
+
+#### Path 1: Application Startup
+```
+main.py
+  → build_players() [engine/setup.py:12-20]
+      → Returns [Player("Toph", is_human=True), Player("Computer", is_human=False)]
+
+  → build_decks() [engine/setup.py:23-38]
+      → deck_builder.build_decks() [utils/deck_builder.py:70-87]
+          → google_sheets_client() [utils/google_client.py]
+          → load_star_cards() [utils/card_loader.py:14-30]
+          → load_power_cards() [utils/card_loader.py:32-54]
+          → load_event_cards() [utils/card_loader.py:56-70]
+          → load_fan_cards() [utils/card_loader.py:72-84]
+          → build_main_deck_from_sheet() [utils/deck_builder.py:12-24]
+          → build_event_deck_from_sheet() [utils/deck_builder.py:26-44]
+          → build_fan_deck_from_sheet() [utils/deck_builder.py:46-68]
+      → Wrap in Deck dataclasses
+
+  → deal_starting_hands() [engine/setup.py:40-50]
+      → For each player:
+          → draw_card(main_deck) × 4 [engine/rules/deck_ops.py:11-15]
+          → player.hand.append(card)
+
+  → GameEngine(players, decks) [engine/game_engine.py:10-17]
+      → Store references, set turn=1, pending_card=None
+
+  → GameClient(engine) [ui/game_client.py:6-18]
+      → dpg.create_context()
+      → dpg.create_viewport()
+      → setup_ui() - Create window layout
+      → state = engine.snapshot() - Get initial state
+      → refresh_zones() - Render initial UI
+      → dpg.show_viewport()
+      → dpg.start_dearpygui() - BLOCKS until window closed
+```
+
+#### Path 2: Playing a Star Card (Full)
+```
+User clicks "Play" button on Star Card in hand
+  ↓
+DearPyGui button callback [ui/game_client.py:105-106]
+  → _card_button_callback(sender, app_data, user_data)
+  → user_data contains: {"type": "PLAY_CARD", "payload": {"player": 0, "hand_index": 2}}
+  ↓
+on_card_action(command) [ui/game_client.py:101-103]
+  → game.dispatch(command)
+      ↓
+      GameEngine.dispatch() [engine/game_engine.py:19-50]
+      → Extract action="PLAY_CARD", payload={"player": 0, "hand_index": 2}
+      → Validate player_index (0 <= 0 < 2) ✓
+      → Get player object: self.players[0]
+      → Skip buggy isinstance(player, StarCard) check (always False)
+      → Fall through to other conditions (none match)
+      → Return snapshot() WITHOUT calling any rule function
+          ↓
+          (Note: Bug prevents this path. Actual path via refactored code in common_ops)
+          ↓
+      play_card_from_hand(player, hand_index) [engine/rules/common_ops.py:7-31]
+      → Validate hand_index (2 >= 0 and 2 < len(hand)) ✓
+      → Get card: player.hand[2]
+      → Check isinstance(card, StarCard) ✓
+          ↓
+          play_star_from_hand(player, hand_index) [engine/rules/star_ops.py:6-14]
+          → Double-check isinstance(card, StarCard) ✓
+          → player.hand.pop(2) - Remove card from hand
+          → player.star_cards.append(card) - Add to board
+          → logger.info(f"{player.name} played {card.name}")
+          ← Return (no return value)
+      ← Return (no return value)
+
+      snapshot() [engine/game_engine.py:52-59]
+      → Serialize current state to dict
+      → player_view() for each player [engine/serializers.py:25-67]
+      → deck_view() for each deck [engine/serializers.py:69-73]
+      ← Return state dict
+  ← Return state dict (ignored by on_card_action)
+
+  → refresh_zones() [ui/game_client.py:33-99]
+      → state = game.snapshot() - Get fresh state (again)
+      → Clear all UI widgets in deck_zone, hand_zone, board_zone
+      → Re-render decks, boards, hand from state
+      → display_card() for each card [ui/game_client.py:108-147]
+          → Create child_window widget
+          → Add text for card name
+          → _render_star_card() or _render_power_card()
+          → Add button if show_button=True
+  ← Return (no return value)
+← Return (callback complete)
+```
+
+#### Path 3: Drawing a Card (Used in deal_starting_hands)
+```
+draw_card(deck) [engine/rules/deck_ops.py:11-15]
+  → logger.info(f"Drawing card from {deck.name} with {len(deck.cards)} cards")
+  → Check if deck.cards is empty
+      If empty: return None
+      If not: deck.cards.pop(0) - Remove first card
+  ← Return card object (or None)
+```
+
+**Mutation Details**:
+- `pop(0)` removes from front of list (index 0)
+- Deck is **not** shuffled again after draw
+- If deck runs out, returns None (no error, no reshuffle)
 
 ---
 
