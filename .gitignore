@@ -1,8 +1,71 @@
 /resources/google_service_account.json
-ui/__pycache__/game_client.cpython-310.pyc
-utils/__pycache__/card_loader.cpython-310.pyc
-utils/__pycache__/deck_builder.cpython-310.pyc
-resources/__pycache__/config.cpython-310.pyc
-classes/__pycache__/player_classes.cpython-310.pyc
-classes/__pycache__/game_classes.cpython-310.pyc
-classes/__pycache__/card_classes.cpython-310.pyc
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Railway
+.railway/
