@@ -264,6 +264,47 @@
             font-weight: bold;
         }
 
+        .attached-powers {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 2px solid rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .attached-power-badge {
+            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+            border: 2px solid rgba(255,255,255,0.6);
+            border-radius: 6px;
+            padding: 6px 8px;
+            font-size: 11px;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+
+        .attached-power-badge:hover {
+            transform: translateX(3px);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+        }
+
+        .badge-name {
+            font-weight: bold;
+            font-size: 10px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .badge-mods {
+            font-size: 9px;
+            opacity: 0.9;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
         .card-button {
             margin-top: 10px;
             padding: 8px;
@@ -601,6 +642,8 @@
             div.className = classes.join(' ');
 
             let statsHtml = '';
+            let attachedCardsHtml = '';
+
             if (card.type === 'StarCard') {
                 statsHtml = `
                     <div class="card-stat"><span>⭐ Aura:</span><span>${card.aura}</span></div>
@@ -613,6 +656,26 @@
                 const fanCount = card.attached_fans?.length || 0;
                 if (fanCount > 0) {
                     statsHtml += `<div class="card-fans">⭐ Fans: ${fanCount}</div>`;
+                }
+
+                // Show attached power cards
+                const powerCards = card.attached_power_cards || [];
+                if (powerCards.length > 0) {
+                    attachedCardsHtml = '<div class="attached-powers">';
+                    powerCards.forEach((power, idx) => {
+                        const modifiers = power.stat_modifiers ?
+                            Object.entries(power.stat_modifiers)
+                                .map(([stat, val]) => `${stat.substring(0, 3)} ${val > 0 ? '+' : ''}${val}`)
+                                .join(', ')
+                            : '';
+                        attachedCardsHtml += `
+                            <div class="attached-power-badge" title="${power.name}: ${modifiers}">
+                                <div class="badge-name">${power.name}</div>
+                                <div class="badge-mods">${modifiers}</div>
+                            </div>
+                        `;
+                    });
+                    attachedCardsHtml += '</div>';
                 }
             } else if (card.stat_modifiers) {
                 Object.entries(card.stat_modifiers).forEach(([stat, value]) => {
@@ -642,6 +705,7 @@
             div.innerHTML = `
                 <div class="card-name">${card.name}</div>
                 <div class="card-stats">${statsHtml}</div>
+                ${attachedCardsHtml}
                 ${buttonHtml}
             `;
 
