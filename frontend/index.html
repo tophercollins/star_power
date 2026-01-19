@@ -734,11 +734,16 @@
             let attachedCardsHtml = '';
 
             if (card.type === 'StarCard') {
+                const powerCardsCount = (card.attached_power_cards || []).length;
+
                 statsHtml = `
                     <div class="card-stat"><span>⭐ Aura:</span><span>${card.aura}</span></div>
                     <div class="card-stat"><span>🎤 Talent:</span><span>${card.talent}</span></div>
                     <div class="card-stat"><span>📱 Influence:</span><span>${card.influence}</span></div>
                     <div class="card-stat"><span>🏆 Legacy:</span><span>${card.legacy}</span></div>
+                    <div style="background: red; color: white; padding: 10px; margin-top: 10px; font-size: 16px; font-weight: bold;">
+                        🔥 PWR: ${powerCardsCount} 🔥
+                    </div>
                 `;
 
                 // Show fans if attached
