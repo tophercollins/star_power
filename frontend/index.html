@@ -862,6 +862,8 @@
                         selectedStar = starIndex;
                         selectStarForEvent(starIndex, selectedStat);
                     };
+                    // Add visual indicator that this star is clickable for event
+                    buttonHtml = `<button class="card-button" style="background: #27ae60;" onclick="event.stopPropagation(); selectStarForEvent(${starIndex}, '${selectedStat}')">Use in Event</button>`;
                 }
                 // Star selection for power card targeting
                 else if (selectedPowerCard !== null) {
@@ -1025,33 +1027,26 @@
                 `;
             }
 
-            // Stat selector
+            // Stat selector - simplified for single-stat events
             const statSelectorDiv = document.getElementById('statSelector');
             statSelectorDiv.innerHTML = '';
 
-            let availableStats = [];
+            // All events now have stat_options with a single stat
             if (event.stat_options && event.stat_options.length > 0) {
-                availableStats = event.stat_options;
-            } else if (event.event_type === 'combined_stat') {
-                // No stat choice for combined events
-                statSelectorDiv.innerHTML = '<p style="text-align: center;">No stat selection needed - all stats summed</p>';
-            } else if (event.winning_stat) {
-                // Auto-select for tag/threshold events
-                selectedStat = event.winning_stat;
-                statSelectorDiv.innerHTML = `<p style="text-align: center;">Using: ${event.winning_stat.toUpperCase()}</p>`;
-            }
+                // Auto-select the first (and only) stat
+                selectedStat = event.stat_options[0];
 
-            availableStats.forEach(stat => {
-                const button = document.createElement('button');
-                button.className = 'stat-button';
-                if (selectedStat === stat) button.classList.add('selected');
-                button.textContent = stat.toUpperCase();
-                button.onclick = () => {
-                    selectedStat = stat;
-                    displayGameState(); // Refresh to show selection
-                };
-                statSelectorDiv.appendChild(button);
-            });
+                // Display which stat will be used
+                const statName = selectedStat.toUpperCase();
+                statSelectorDiv.innerHTML = `
+                    <p style="text-align: center; font-size: 18px; font-weight: bold; color: #ffd700;">
+                        🎯 Using: ${statName}
+                    </p>
+                    <p style="text-align: center; margin-top: 5px; opacity: 0.9;">
+                        Highest ${statName} wins!
+                    </p>
+                `;
+            }
         }
     </script>
 </body>

@@ -6,8 +6,7 @@ import uuid
 from typing import List
 from engine.models.cards import (
     StarCard, ModifyStatCard, FanCard,
-    StatContestEvent, CombinedStatEvent, ThresholdEvent,
-    TagBasedEvent, RiskRewardEvent, SharedRewardEvent
+    StatContestEvent
 )
 
 def get_star_cards() -> List[StarCard]:
@@ -229,196 +228,76 @@ def get_power_cards() -> List[ModifyStatCard]:
     return cards
 
 def get_event_cards():
-    """Return a list of Event Cards with varied win conditions (Marvel Snap-inspired)"""
+    """Return a list of Event Cards - SIMPLIFIED to basic single-stat contests only
+
+    Complex event types backed up in card_data_backup_complex_events.py
+    """
     cards = [
-        # ===== STAT CONTEST EVENTS (Highest Wins) =====
+        # Simple single-stat contests - highest wins
         StatContestEvent(
             id=str(uuid.uuid4()),
             name="Rap Battle",
-            description="Who has the superior skills?",
+            description="Who has the best skills?",
             stat_options=["talent"],
             contest_type="highest",
             fan_reward=1
         ),
         StatContestEvent(
             id=str(uuid.uuid4()),
-            name="Red Carpet Showdown",
-            description="Who commands the most presence?",
+            name="Red Carpet Event",
+            description="Who has the most star power?",
             stat_options=["aura"],
             contest_type="highest",
             fan_reward=1
         ),
         StatContestEvent(
             id=str(uuid.uuid4()),
-            name="Social Media War",
-            description="Battle for online dominance",
+            name="Social Media Battle",
+            description="Who has the biggest reach?",
             stat_options=["influence"],
             contest_type="highest",
             fan_reward=1
         ),
         StatContestEvent(
             id=str(uuid.uuid4()),
-            name="Hall of Fame Vote",
-            description="Choose: talent or aura",
-            stat_options=["talent", "aura"],
-            contest_type="highest",
-            fan_reward=1
-        ),
-
-        # ===== INVERSE CONTESTS (Lowest Wins) =====
-        StatContestEvent(
-            id=str(uuid.uuid4()),
-            name="Rookie Spotlight",
-            description="Fresh talent rises! Lowest Legacy wins",
+            name="Hall of Fame",
+            description="Who has the greatest legacy?",
             stat_options=["legacy"],
-            contest_type="lowest",
+            contest_type="highest",
+            fan_reward=1
+        ),
+        # Duplicate each event type for more variety in the deck
+        StatContestEvent(
+            id=str(uuid.uuid4()),
+            name="Talent Showcase",
+            description="Pure skill competition",
+            stat_options=["talent"],
+            contest_type="highest",
             fan_reward=1
         ),
         StatContestEvent(
             id=str(uuid.uuid4()),
-            name="Underdog Story",
-            description="The humble triumph! Lowest Aura wins",
+            name="Award Show",
+            description="Who shines brightest?",
             stat_options=["aura"],
-            contest_type="lowest",
+            contest_type="highest",
             fan_reward=1
         ),
-
-        # ===== COMBINED STAT EVENTS =====
-        CombinedStatEvent(
+        StatContestEvent(
             id=str(uuid.uuid4()),
-            name="Total Star Power",
-            description="Sum of ALL stats determines the winner",
-            required_stats=["aura", "talent", "influence", "legacy"],
-            fan_reward=2
-        ),
-        CombinedStatEvent(
-            id=str(uuid.uuid4()),
-            name="Skill + Charisma",
-            description="Talent + Aura combined",
-            required_stats=["talent", "aura"],
-            fan_reward=1
-        ),
-        CombinedStatEvent(
-            id=str(uuid.uuid4()),
-            name="Impact + Legacy",
-            description="Influence + Legacy combined",
-            required_stats=["influence", "legacy"],
-            fan_reward=1
-        ),
-
-        # ===== THRESHOLD EVENTS =====
-        ThresholdEvent(
-            id=str(uuid.uuid4()),
-            name="Elite Club",
-            description="Must have Influence 7+ to enter. Highest Aura wins",
-            required_stat="influence",
-            threshold=7,
-            winning_stat="aura",
-            fan_reward=2
-        ),
-        ThresholdEvent(
-            id=str(uuid.uuid4()),
-            name="Veteran's Tournament",
-            description="Must have Legacy 6+ to compete. Highest Talent wins",
-            required_stat="legacy",
-            threshold=6,
-            winning_stat="talent",
-            fan_reward=2
-        ),
-        ThresholdEvent(
-            id=str(uuid.uuid4()),
-            name="Main Stage Only",
-            description="Must have Aura 6+ to perform. Highest Talent wins",
-            required_stat="aura",
-            threshold=6,
-            winning_stat="talent",
-            fan_reward=2
-        ),
-
-        # ===== TAG-BASED EVENTS =====
-        TagBasedEvent(
-            id=str(uuid.uuid4()),
-            name="Hip-Hop Summit",
-            description="Rappers only! Highest Influence wins",
-            required_tags=["Rapper"],
-            winning_stat="influence",
-            fan_reward=2
-        ),
-        TagBasedEvent(
-            id=str(uuid.uuid4()),
-            name="Pop Music Awards",
-            description="Pop stars only! Highest Aura wins",
-            required_tags=["Pop"],
-            winning_stat="aura",
-            fan_reward=2
-        ),
-        TagBasedEvent(
-            id=str(uuid.uuid4()),
-            name="Legend's Ceremony",
-            description="Legends only! Highest Legacy wins",
-            required_tags=["Legend"],
-            winning_stat="legacy",
-            fan_reward=3
-        ),
-        TagBasedEvent(
-            id=str(uuid.uuid4()),
-            name="DJ Battle",
-            description="DJs only! Highest Talent wins",
-            required_tags=["DJ"],
-            winning_stat="talent",
-            fan_reward=2
-        ),
-
-        # ===== RISK/REWARD EVENTS =====
-        RiskRewardEvent(
-            id=str(uuid.uuid4()),
-            name="Viral Challenge",
-            description="High stakes! Winner gets 3 fans, loser loses 1",
+            name="Viral Moment",
+            description="Who trends harder?",
             stat_options=["influence"],
-            fan_reward=3,
-            fan_penalty=1
+            contest_type="highest",
+            fan_reward=1
         ),
-        RiskRewardEvent(
+        StatContestEvent(
             id=str(uuid.uuid4()),
-            name="Career-Defining Moment",
-            description="Everything on the line! Choose any stat",
-            stat_options=["aura", "talent", "influence", "legacy"],
-            fan_reward=3,
-            fan_penalty=1
-        ),
-        RiskRewardEvent(
-            id=str(uuid.uuid4()),
-            name="Controversial Feud",
-            description="High risk! Choose: Aura or Influence",
-            stat_options=["aura", "influence"],
-            fan_reward=2,
-            fan_penalty=1
-        ),
-
-        # ===== SHARED REWARD EVENTS =====
-        SharedRewardEvent(
-            id=str(uuid.uuid4()),
-            name="Charity Concert",
-            description="Both stars gain fans! Winner: 2, Runner-up: 1",
-            stat_options=["talent", "aura"],
-            winner_fans=2,
-            loser_fans=1
-        ),
-        SharedRewardEvent(
-            id=str(uuid.uuid4()),
-            name="Collaboration Event",
-            description="Everyone wins! Highest Influence gets 3, other gets 1",
-            stat_options=["influence"],
-            winner_fans=3,
-            loser_fans=1
-        ),
-        SharedRewardEvent(
-            id=str(uuid.uuid4()),
-            name="Industry Celebration",
-            description="All participants rewarded! Choose any stat",
-            stat_options=["aura", "talent", "influence", "legacy"],
-            winner_fans=2,
-            loser_fans=1
+            name="Icon Status",
+            description="Who's more legendary?",
+            stat_options=["legacy"],
+            contest_type="highest",
+            fan_reward=1
         ),
     ]
     return cards
