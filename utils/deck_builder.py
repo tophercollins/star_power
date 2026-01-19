@@ -35,21 +35,11 @@ def build_event_deck_from_cards():
     """Build event deck from hardcoded card data"""
     event_cards = get_event_cards()
 
-    single_stat = [event for event in event_cards if len(event.stat_options) == 1]
-    double_stat = [event for event in event_cards if len(event.stat_options) == 2]
-    quad_stat = [event for event in event_cards if len(event.stat_options) == 4]
-
-    event_config = GAME_CONFIG["event_deck_composition"]
-
-    combined_cards = (
-        single_stat * event_config["single_stat_contest"]
-        + double_stat * event_config["double_stat_contest"]
-        + quad_stat * event_config["quad_stat_contest"]
-    )
-
-    random.shuffle(combined_cards)
-    deck = Deck(name="Event Deck", cards=combined_cards)
+    # Use all event cards - the new system has 23 diverse events
+    # No need to categorize by stat_options since we have varied event types
+    deck = Deck(name="Event Deck", cards=event_cards)
     shuffle_deck(deck)
+    logger.info(f"Event deck built with {len(event_cards)} cards across 6 event types")
     return deck
 
 def build_fan_deck_from_cards():

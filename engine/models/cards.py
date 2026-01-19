@@ -37,6 +37,7 @@ class StatContestEvent(EventCard):
 class CombinedStatEvent(EventCard):
     """Event where multiple stats are summed together"""
     required_stats: List[str] = field(default_factory=list)  # Stats to sum
+    stat_options: List[str] = field(default_factory=list)  # Empty - no player choice needed
     event_type: str = "combined_stat"
 
 
@@ -46,6 +47,7 @@ class ThresholdEvent(EventCard):
     required_stat: str = "aura"
     threshold: int = 5  # Minimum stat value required
     winning_stat: str = "talent"  # Stat used to determine winner among qualified
+    stat_options: List[str] = field(default_factory=list)  # Empty - no player choice needed
     event_type: str = "threshold"
 
 
@@ -54,6 +56,7 @@ class TagBasedEvent(EventCard):
     """Event where only certain tags can participate"""
     required_tags: List[str] = field(default_factory=list)  # Tags that can compete
     winning_stat: str = "aura"  # Stat used to determine winner
+    stat_options: List[str] = field(default_factory=list)  # Empty - no player choice needed
     event_type: str = "tag_based"
 
 
