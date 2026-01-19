@@ -24,28 +24,19 @@ class GameEngine:
         if action == "PLAY_CARD":
             player_index = payload.get("player", 0)
             hand_index = payload.get("hand_index")
+
             if 0 <= player_index < len(self.players):
                 player = self.players[player_index]
 
-                if isinstance(player, StarCard):
-                    play_card_from_hand(player, hand_index)
-                elif isinstance(player, PowerCard) and getattr(card, "targets_star", False):
-                    if player.star_cards:
-                        self.pending_card = {
-                            "player": player_index,
-                            "card_id": getattr(card, "id", None),
-                            "card_type": "PowerCard",
-                            "target_type": "star",
-                        }
-                    else:
-                        logger.info(f"{player.name} cannot play PowerCard without a Star on board")
+                # Validate hand_index and get the card
+                if hand_index is None or hand_index < 0 or hand_index >= len(player.hand):
+                    logger.warning(f"Invalid hand index {hand_index} for player {player.name}")
+                    return self.snapshot()
 
-                else:
-                    logger.info(f"Unknown card type or unsupported action: {type(card).__name__}")
-
-                    
+                # Delegate to common_ops which handles all card types
+                play_card_from_hand(player, hand_index)
             else:
-                logger.info(f"Invalid player index: {player}")
+                logger.warning(f"Invalid player index: {player_index}")
 
         return self.snapshot()
 
