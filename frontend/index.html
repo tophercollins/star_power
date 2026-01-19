@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Power - Test UI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 3em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .controls {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .controls input, .controls button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .controls input {
+            background: rgba(255,255,255,0.9);
+        }
+
+        .controls button {
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.1s;
+        }
+
+        .controls button:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+
+        .controls button:active {
+            transform: scale(0.95);
+        }
+
+        .game-info {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .board {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .board h2 {
+            margin-bottom: 15px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+        }
+
+        .cards {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            min-height: 200px;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: 3px solid rgba(255,255,255,0.5);
+            border-radius: 10px;
+            padding: 15px;
+            width: 180px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        .card.star-card {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            color: #2d3436;
+        }
+
+        .card.power-card {
+            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+        }
+
+        .card-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 2px solid rgba(0,0,0,0.2);
+            padding-bottom: 5px;
+        }
+
+        .card-stats {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .card-stat {
+            display: flex;
+            justify-content: space-between;
+            margin: 3px 0;
+        }
+
+        .card-button {
+            margin-top: 10px;
+            padding: 8px;
+            width: 100%;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .card-button:hover {
+            background: #c0392b;
+        }
+
+        .empty {
+            color: rgba(255,255,255,0.5);
+            font-style: italic;
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #27ae60;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .deck-info {
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #debugOutput {
+            background: rgba(0,0,0,0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⭐ Star Power</h1>
+
+        <div class="controls">
+            <input type="text" id="playerName" placeholder="Your Name" value="Toph">
+            <button onclick="createGame()">🎮 New Game</button>
+            <button onclick="refreshGameState()">🔄 Refresh</button>
+            <button onclick="toggleDebug()">🐛 Toggle Debug</button>
+        </div>
+
+        <div id="message" class="hidden"></div>
+
+        <div id="gameContainer" class="hidden">
+            <div class="game-info">
+                <div>
+                    <strong>Game ID:</strong> <span id="gameId">-</span>
+                </div>
+                <div>
+                    <strong>Turn:</strong> <span id="turn">-</span>
+                </div>
+                <div class="deck-info">
+                    <div><strong>Main:</strong> <span id="mainDeck">0</span> cards</div>
+                    <div><strong>Event:</strong> <span id="eventDeck">0</span> cards</div>
+                    <div><strong>Fan:</strong> <span id="fanDeck">0</span> cards</div>
+                </div>
+            </div>
+
+            <!-- Opponent Board -->
+            <div class="board">
+                <h2>🤖 <span id="opponentName">Computer</span>'s Stars</h2>
+                <div id="opponentStars" class="cards">
+                    <div class="empty">No stars yet</div>
+                </div>
+            </div>
+
+            <!-- Your Board -->
+            <div class="board">
+                <h2>👤 <span id="playerNameDisplay">You</span>'s Stars</h2>
+                <div id="yourStars" class="cards">
+                    <div class="empty">No stars yet</div>
+                </div>
+            </div>
+
+            <!-- Your Hand -->
+            <div class="board">
+                <h2>🃏 Your Hand</h2>
+                <div id="yourHand" class="cards">
+                    <div class="empty">No cards</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="debugOutput" class="hidden"></div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_URL = 'https://starpower-production.up.railway.app';
+        let currentGameId = null;
+        let currentGameState = null;
+
+        // Utility functions
+        function showMessage(message, type = 'success') {
+            const msgEl = document.getElementById('message');
+            msgEl.textContent = message;
+            msgEl.className = type;
+            setTimeout(() => msgEl.className = 'hidden', 5000);
+        }
+
+        function log(message, data = null) {
+            console.log(message, data);
+            const debugEl = document.getElementById('debugOutput');
+            const time = new Date().toLocaleTimeString();
+            debugEl.innerHTML += `<div>[${time}] ${message}</div>`;
+            if (data) {
+                debugEl.innerHTML += `<div style="margin-left: 20px; color: #aaa;">${JSON.stringify(data, null, 2)}</div>`;
+            }
+            debugEl.scrollTop = debugEl.scrollHeight;
+        }
+
+        function toggleDebug() {
+            const debugEl = document.getElementById('debugOutput');
+            debugEl.classList.toggle('hidden');
+        }
+
+        // API calls
+        async function createGame() {
+            const playerName = document.getElementById('playerName').value || 'Toph';
+
+            try {
+                log('Creating new game...');
+                const response = await fetch(`${API_URL}/api/game/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        player1_name: playerName,
+                        player2_name: 'Computer'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+
+                const data = await response.json();
+                log('Game created!', data);
+
+                currentGameId = data.game_id;
+                currentGameState = data.state;
+
+                showMessage('Game created successfully!', 'success');
+                displayGameState();
+
+            } catch (error) {
+                log('Error creating game', error);
+                showMessage('Error creating game: ' + error.message, 'error');
+            }
+        }
+
+        async function refreshGameState() {
+            if (!currentGameId) {
+                showMessage('No active game', 'error');
+                return;
+            }
+
+            try {
+                log('Refreshing game state...');
+                const response = await fetch(`${API_URL}/api/game/${currentGameId}/state`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                currentGameState = await response.json();
+                log('State refreshed', currentGameState);
+                displayGameState();
+
+            } catch (error) {
+                log('Error refreshing state', error);
+                showMessage('Error refreshing: ' + error.message, 'error');
+            }
+        }
+
+        async function playCard(handIndex) {
+            if (!currentGameId) return;
+
+            try {
+                log(`Playing card at index ${handIndex}...`);
+                const response = await fetch(`${API_URL}/api/game/${currentGameId}/play_card`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        player_index: 0,
+                        hand_index: handIndex
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                currentGameState = await response.json();
+                log('Card played!', currentGameState);
+                showMessage('Card played!', 'success');
+                displayGameState();
+
+            } catch (error) {
+                log('Error playing card', error);
+                showMessage('Error playing card: ' + error.message, 'error');
+            }
+        }
+
+        // Display functions
+        function renderCard(card, handIndex = null) {
+            const div = document.createElement('div');
+            div.className = `card ${card.type === 'StarCard' ? 'star-card' : 'power-card'}`;
+
+            let statsHtml = '';
+            if (card.type === 'StarCard') {
+                statsHtml = `
+                    <div class="card-stat"><span>⭐ Aura:</span><span>${card.aura}</span></div>
+                    <div class="card-stat"><span>🎤 Talent:</span><span>${card.talent}</span></div>
+                    <div class="card-stat"><span>📱 Influence:</span><span>${card.influence}</span></div>
+                    <div class="card-stat"><span>🏆 Legacy:</span><span>${card.legacy}</span></div>
+                `;
+            } else if (card.stat_modifiers) {
+                Object.entries(card.stat_modifiers).forEach(([stat, value]) => {
+                    statsHtml += `<div class="card-stat"><span>${stat}:</span><span>${value > 0 ? '+' : ''}${value}</span></div>`;
+                });
+            }
+
+            div.innerHTML = `
+                <div class="card-name">${card.name}</div>
+                <div class="card-stats">${statsHtml}</div>
+                ${handIndex !== null ? `<button class="card-button" onclick="playCard(${handIndex})">Play</button>` : ''}
+            `;
+
+            return div;
+        }
+
+        function displayGameState() {
+            if (!currentGameState) return;
+
+            // Show game container
+            document.getElementById('gameContainer').classList.remove('hidden');
+
+            // Update game info
+            document.getElementById('gameId').textContent = currentGameId.substring(0, 8) + '...';
+            document.getElementById('turn').textContent = currentGameState.turn || 1;
+            document.getElementById('mainDeck').textContent = currentGameState.main_deck?.size || 0;
+            document.getElementById('eventDeck').textContent = currentGameState.event_deck?.size || 0;
+            document.getElementById('fanDeck').textContent = currentGameState.fan_deck?.size || 0;
+
+            const players = currentGameState.players || [];
+            const player = players[0] || {};
+            const opponent = players[1] || {};
+
+            // Update player names
+            document.getElementById('playerNameDisplay').textContent = player.name || 'You';
+            document.getElementById('opponentName').textContent = opponent.name || 'Computer';
+
+            // Display opponent's stars
+            const opponentStarsDiv = document.getElementById('opponentStars');
+            opponentStarsDiv.innerHTML = '';
+            if (opponent.stars && opponent.stars.length > 0) {
+                opponent.stars.forEach(card => {
+                    opponentStarsDiv.appendChild(renderCard(card));
+                });
+            } else {
+                opponentStarsDiv.innerHTML = '<div class="empty">No stars yet</div>';
+            }
+
+            // Display your stars
+            const yourStarsDiv = document.getElementById('yourStars');
+            yourStarsDiv.innerHTML = '';
+            if (player.stars && player.stars.length > 0) {
+                player.stars.forEach(card => {
+                    yourStarsDiv.appendChild(renderCard(card));
+                });
+            } else {
+                yourStarsDiv.innerHTML = '<div class="empty">No stars yet</div>';
+            }
+
+            // Display your hand
+            const yourHandDiv = document.getElementById('yourHand');
+            yourHandDiv.innerHTML = '';
+            if (player.hand && player.hand.length > 0) {
+                player.hand.forEach((card, index) => {
+                    yourHandDiv.appendChild(renderCard(card, index));
+                });
+            } else {
+                yourHandDiv.innerHTML = '<div class="empty">No cards</div>';
+            }
+        }
+
+        // Initialize
+        log('Star Power Test UI loaded');
+        log(`API URL: ${API_URL}`);
+    </script>
+</body>
+</html>
