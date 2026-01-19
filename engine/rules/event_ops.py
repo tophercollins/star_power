@@ -4,8 +4,9 @@ Event Operations - Event triggering, star selection, and contest resolution
 import logging
 from typing import Dict, Any, Optional, Tuple, List
 from engine.models.cards import (
-    EventCard, StatContestEvent, CombinedStatEvent, ThresholdEvent,
-    TagBasedEvent, RiskRewardEvent, SharedRewardEvent, StarCard, FanCard
+    EventCard, StatContestEvent, StarCard, FanCard
+    # Complex event types removed - see card_data_backup_complex_events.py
+    # CombinedStatEvent, ThresholdEvent, TagBasedEvent, RiskRewardEvent, SharedRewardEvent
 )
 from engine.models.deck import Deck
 from engine.rules.deck_ops import draw_card
@@ -32,6 +33,7 @@ def draw_event(event_deck: Deck) -> Optional[EventCard]:
 def can_star_participate(star: StarCard, event: EventCard) -> Tuple[bool, str]:
     """
     Check if a star can participate in an event.
+    Simplified - all stars can participate in basic stat contests.
 
     Args:
         star: The star card
@@ -40,57 +42,28 @@ def can_star_participate(star: StarCard, event: EventCard) -> Tuple[bool, str]:
     Returns:
         Tuple of (can_participate, reason)
     """
-    # Tag-based events require specific tags
-    if isinstance(event, TagBasedEvent):
-        if not any(tag in event.required_tags for tag in star.tags):
-            return False, f"Star doesn't have required tags: {event.required_tags}"
-
-    # Threshold events require minimum stat value
-    if isinstance(event, ThresholdEvent):
-        stat_value = getattr(star, event.required_stat, 0)
-        if stat_value < event.threshold:
-            return False, f"Star's {event.required_stat} ({stat_value}) below threshold ({event.threshold})"
-
+    # All stars can participate in simple stat contests
     return True, "Star can participate"
 
 
 def calculate_star_score(star: StarCard, event: EventCard, chosen_stat: Optional[str] = None) -> int:
     """
     Calculate a star's score for an event.
+    Simplified - all events are basic stat contests.
 
     Args:
         star: The star card
         event: The event card
-        chosen_stat: The stat chosen by the player (for stat contest events)
+        chosen_stat: The stat chosen by the player
 
     Returns:
         The star's score for this event
     """
-    # Stat contest - use chosen stat
-    if isinstance(event, StatContestEvent):
-        if not chosen_stat:
-            logger.warning("StatContestEvent requires chosen_stat")
-            return 0
-        return getattr(star, chosen_stat, 0)
-
-    # Combined stat - sum multiple stats
-    if isinstance(event, CombinedStatEvent):
-        return sum(getattr(star, stat, 0) for stat in event.required_stats)
-
-    # Threshold or tag-based - use winning stat
-    if isinstance(event, (ThresholdEvent, TagBasedEvent)):
-        return getattr(star, event.winning_stat, 0)
-
-    # Risk/reward or shared reward - use chosen stat
-    if isinstance(event, (RiskRewardEvent, SharedRewardEvent)):
-        if not chosen_stat:
-            logger.warning("RiskRewardEvent/SharedRewardEvent requires chosen_stat")
-            return 0
-        return getattr(star, chosen_stat, 0)
-
-    # Default - return 0
-    logger.warning(f"Unknown event type: {type(event).__name__}")
-    return 0
+    # All events are StatContestEvent - use chosen stat
+    if not chosen_stat:
+        logger.warning("StatContestEvent requires chosen_stat")
+        return 0
+    return getattr(star, chosen_stat, 0)
 
 
 def resolve_event(
@@ -178,10 +151,7 @@ def resolve_event(
     p1_score = result["player1_score"]
     p2_score = result["player2_score"]
 
-    # Handle inverse contests (lowest wins)
-    if isinstance(event, StatContestEvent) and event.contest_type == "lowest":
-        p1_score, p2_score = p2_score, p1_score  # Invert for comparison
-
+    # All events are "highest" wins (contest_type="highest")
     # Determine winner
     if p1_score > p2_score:
         result["winner"] = 0
@@ -190,43 +160,17 @@ def resolve_event(
     else:
         result["winner"] = None  # Tie
 
-    # Apply rewards/penalties based on event type
-    if isinstance(event, SharedRewardEvent):
-        # Both players get fans
-        if result["winner"] == 0:
-            result["player1_fans_won"] = event.winner_fans
-            result["player2_fans_won"] = event.loser_fans
-        elif result["winner"] == 1:
-            result["player2_fans_won"] = event.winner_fans
-            result["player1_fans_won"] = event.loser_fans
-        else:
-            # Tie - both get loser amount
-            result["player1_fans_won"] = event.loser_fans
-            result["player2_fans_won"] = event.loser_fans
-        result["description"] = f"{event.name}: Both players receive fans!"
-
-    elif isinstance(event, RiskRewardEvent):
-        # Winner gets bonus, loser loses fans
-        if result["winner"] == 0:
-            result["player1_fans_won"] = event.fan_reward
-            result["player2_fans_lost"] = event.fan_penalty
-        elif result["winner"] == 1:
-            result["player2_fans_won"] = event.fan_reward
-            result["player1_fans_lost"] = event.fan_penalty
-        result["description"] = f"{event.name}: High stakes! Winner gets {event.fan_reward}, loser loses {event.fan_penalty}"
-
+    # Standard reward - winner gets 1 fan
+    if result["winner"] == 0:
+        result["player1_fans_won"] = getattr(event, 'fan_reward', 1)
+        winner_star = player1_star
+        result["description"] = f"{event.name}: {winner_star.name} wins with {p1_score} {player1_stat}!"
+    elif result["winner"] == 1:
+        result["player2_fans_won"] = getattr(event, 'fan_reward', 1)
+        winner_star = player2_star
+        result["description"] = f"{event.name}: {winner_star.name} wins with {p2_score} {player2_stat}!"
     else:
-        # Standard reward
-        if result["winner"] == 0:
-            result["player1_fans_won"] = getattr(event, 'fan_reward', 1)
-        elif result["winner"] == 1:
-            result["player2_fans_won"] = getattr(event, 'fan_reward', 1)
-
-        if result["winner"] is not None:
-            winner_star = player1_star if result["winner"] == 0 else player2_star
-            result["description"] = f"{event.name}: {winner_star.name} wins!"
-        else:
-            result["description"] = f"{event.name}: It's a tie!"
+        result["description"] = f"{event.name}: It's a tie! Both have {p1_score} {player1_stat}!"
 
     logger.info(f"Event resolved: {result['description']}")
     logger.info(f"Scores - P1: {result['player1_score']}, P2: {result['player2_score']}")
