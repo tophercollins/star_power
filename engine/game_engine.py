@@ -5,6 +5,7 @@ from engine.rules.event_ops import draw_event, resolve_event, award_fans, remove
 from engine.rules.deck_ops import draw_card
 # from engine.rules.power_ops import attach_power_by_ids
 from engine.models.cards import StarCard, PowerCard
+from engine.ai import ComputerPlayer
 import logging
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,9 @@ class GameEngine:
 
         # Legacy pending card (for power cards)
         self.pending_card: Optional[Dict[str, Any]] = None
+
+        # Computer AI
+        self.computer_ai = ComputerPlayer(player_index=1)
 
     def dispatch(self, command: dict) -> Dict[str, Any]:
         action = command.get("type")
@@ -105,7 +109,7 @@ class GameEngine:
         return self.snapshot()
 
     def _handle_end_turn(self):
-        """Handle end of turn - draw cards, trigger event if applicable"""
+        """Handle end of turn - draw cards, trigger event if applicable, let computer play"""
         logger.info(f"Ending turn {self.turn}")
 
         # Draw card for each player
@@ -121,12 +125,19 @@ class GameEngine:
         self.powers_played_this_turn = {0: 0, 1: 0}
         logger.info(f"Turn {self.turn} started - play counters reset")
 
+        # Computer AI takes its turn
+        logger.info("Computer AI taking turn...")
+        self.computer_ai.take_turn(self)
+
         # Trigger event starting from turn 2
         if self.turn >= 2 and len(self.event_deck.cards) > 0:
             self.current_event = draw_event(self.event_deck)
             self.phase = "event_select"
             self.player_selections = {}
             logger.info(f"Event triggered: {self.current_event.name}")
+
+            # Computer AI auto-selects for event
+            self._computer_select_for_event()
         else:
             self.phase = "play"
 
@@ -178,6 +189,30 @@ class GameEngine:
         self.player_selections = {}
         self.phase = "play"
 
+    def _computer_select_for_event(self):
+        """Have computer AI automatically select for event"""
+        if not self.current_event:
+            return
+
+        selection = self.computer_ai.select_for_event(self, self.current_event)
+        if selection:
+            star_index = selection["star_index"]
+            stat = selection["stat"]
+
+            # Make the selection
+            player = self.players[1]
+            if 0 <= star_index < len(player.star_cards):
+                star = player.star_cards[star_index]
+                self.player_selections[1] = {
+                    "star": star,
+                    "stat": stat
+                }
+                logger.info(f"Computer selected {star.name} with stat {stat}")
+
+                # Auto-resolve if both players have selected (won't happen yet since player hasn't selected)
+                if len(self.player_selections) == 2:
+                    self._resolve_current_event()
+
     def snapshot(self) -> Dict[str, Any]:
         return {
             "turn": self.turn,
@@ -196,5 +231,5 @@ class GameEngine:
                 "player2": count_player_fans(self.players[1])
             }
         }
-    
+
     

@@ -485,6 +485,14 @@
                 </div>
             </div>
 
+            <!-- Opponent Hand (Debug View) -->
+            <div class="board">
+                <h2>🃏 <span id="opponentNameHand">Computer</span>'s Hand (Debug View)</h2>
+                <div id="opponentHand" class="cards">
+                    <div class="empty">No cards</div>
+                </div>
+            </div>
+
             <!-- Opponent Board -->
             <div class="board">
                 <h2>🤖 <span id="opponentName">Computer</span>'s Stars</h2>
@@ -822,9 +830,21 @@
             // Update player names
             document.getElementById('playerNameDisplay').textContent = player.name || 'You';
             document.getElementById('opponentName').textContent = opponent.name || 'Computer';
+            document.getElementById('opponentNameHand').textContent = opponent.name || 'Computer';
 
             // Display event if active
             displayEvent();
+
+            // Display opponent's hand (debug view)
+            const opponentHandDiv = document.getElementById('opponentHand');
+            opponentHandDiv.innerHTML = '';
+            if (opponent.hand && opponent.hand.length > 0) {
+                opponent.hand.forEach((card, index) => {
+                    opponentHandDiv.appendChild(renderCard(card));
+                });
+            } else {
+                opponentHandDiv.innerHTML = '<div class="empty">No cards</div>';
+            }
 
             // Display opponent's stars
             const opponentStarsDiv = document.getElementById('opponentStars');
