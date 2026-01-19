@@ -27,12 +27,17 @@ star_power/
 │   ├── models/         # Data models
 │   └── serializers.py  # State serialization
 │
+├── frontend/            # Test Web UI
+│   ├── index.html      # Single-page test interface
+│   └── README.md       # Frontend deployment guide
+│
 ├── utils/               # Utilities (shared)
-│   ├── card_loader.py  # Load cards from Google Sheets
+│   ├── card_loader.py  # (Legacy - unused)
 │   └── deck_builder.py # Build game decks
 │
-├── resources/           # Configuration
-│   └── config.py       # Game constants
+├── resources/           # Configuration & Data
+│   ├── config.py       # Game constants
+│   └── card_data.py    # Hardcoded card definitions
 │
 ├── legacy/              # Original desktop app
 │   ├── main.py         # DearPyGui version
@@ -43,7 +48,12 @@ star_power/
 
 ## 🚀 Quick Start
 
-### Backend API (Development)
+### Option 1: Use Live Demo
+
+**Backend**: https://starpower-production.up.railway.app
+**Frontend**: Open `frontend/index.html` in your browser
+
+### Option 2: Run Locally
 
 ```bash
 # Install dependencies
@@ -54,6 +64,16 @@ pip install -r requirements.txt
 python main.py
 
 # Visit http://localhost:8000/docs for API documentation
+```
+
+### Test the Web UI
+
+```bash
+# Open the test interface
+cd frontend
+python3 -m http.server 8000
+
+# Visit http://localhost:8000
 ```
 
 ### Test the API
@@ -83,12 +103,17 @@ curl -X POST http://localhost:8000/api/game/{game_id}/play_card \
 - Functional rule system
 - Command-driven architecture
 
-**Data Source:**
-- Google Sheets API (card definitions)
+**Frontend (Test UI):**
+- Vanilla JavaScript (no build process)
+- Single HTML file
+
+**Data:**
+- Hardcoded card definitions (Python)
 
 **Deployment:**
-- Railway (backend hosting)
-- Supabase (database)
+- Railway (backend hosting - live at starpower-production.up.railway.app)
+- Supabase (database - planned)
+- Vercel (frontend - ready to deploy)
 
 ## 🎯 Current Status
 
@@ -97,12 +122,14 @@ curl -X POST http://localhost:8000/api/game/{game_id}/play_card \
 - Star card play mechanics
 - FastAPI backend with REST endpoints
 - In-memory game state management
-- Google Sheets card data loading
+- Hardcoded card data (20 stars, 5 powers, 8 events)
+- Live deployment on Railway
+- Test web UI for gameplay testing
 
 **🚧 In Progress:**
-- Database persistence
+- Frontend improvements
+- Database persistence (Supabase)
 - User authentication
-- Multiplayer matchmaking
 
 **📋 Planned:**
 - Power card implementation
@@ -217,8 +244,9 @@ This is currently a solo project, but contributions are welcome!
 
 ## 🙏 Acknowledgments
 
-- Card data sourced from Google Sheets
 - Built with FastAPI, Python, and passion for card games!
+- Deployed on Railway
+- Celebrity card data featuring Drake, Beyoncé, Taylor Swift, and more
 
 ---
 
