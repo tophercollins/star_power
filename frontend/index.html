@@ -371,68 +371,150 @@
             overflow-y: auto;
         }
 
-        /* Mobile optimizations */
+        /* Mobile optimizations - 3 cards fit horizontally */
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 2em;
+                margin-bottom: 15px;
+            }
+
+            .controls {
+                padding: 12px;
+                gap: 8px;
+            }
+
+            .controls button, .controls input {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+
             .board {
-                min-height: 400px;
-                margin-bottom: 25px;
+                padding: 12px;
+                margin-bottom: 15px;
+                min-height: auto;
+            }
+
+            .board h2 {
+                font-size: 16px;
+                margin-bottom: 8px;
             }
 
             .cards {
-                gap: 18px;
-                align-items: stretch;
-                justify-content: center;
+                gap: 8px;
+                min-height: 140px;
             }
 
             .card {
-                width: 190px;
-                height: auto;
-                min-height: 280px;
-                max-height: none;
-                padding: 16px;
-                margin-bottom: 15px;
-                font-size: 14px;
-            }
-
-            .card-name {
-                font-size: 18px;
-                margin-bottom: 10px;
-            }
-
-            .card-stats {
-                margin-bottom: 12px;
-                font-size: 14px;
-            }
-
-            .card-stat {
-                padding: 3px 0;
-            }
-
-            .attached-powers {
-                margin-top: 12px;
-                padding: 10px;
-            }
-
-            .attached-power-badge {
-                padding: 10px;
-                font-size: 12px;
-                margin-bottom: 6px;
-                min-height: 40px;
-            }
-
-            .badge-name {
-                font-size: 11px;
-                margin-bottom: 3px;
-            }
-
-            .badge-mods {
+                width: 110px;
+                min-height: 160px;
+                padding: 8px;
                 font-size: 10px;
             }
 
+            .card-name {
+                font-size: 12px;
+                margin-bottom: 5px;
+                padding-bottom: 3px;
+            }
+
+            .card-stats {
+                font-size: 10px;
+                line-height: 1.4;
+            }
+
+            .card-stat {
+                margin: 1px 0;
+                padding: 0;
+            }
+
+            .card-fans {
+                margin-top: 5px;
+                padding-top: 5px;
+                font-size: 9px;
+            }
+
+            .attached-powers {
+                margin-top: 6px;
+                padding: 5px;
+                gap: 3px;
+            }
+
+            .attached-power-badge {
+                padding: 5px 6px;
+                font-size: 9px;
+                min-height: 26px;
+            }
+
+            .badge-name {
+                font-size: 9px;
+                margin-bottom: 2px;
+            }
+
+            .badge-mods {
+                font-size: 8px;
+            }
+
             .card-button {
-                font-size: 14px;
+                font-size: 11px;
+                padding: 5px;
+                margin-top: 6px;
+            }
+
+            .game-info {
+                font-size: 11px;
                 padding: 10px;
-                margin-top: 12px;
+                gap: 8px;
+            }
+
+            .info-section {
+                padding: 6px;
+            }
+
+            .fan-counter {
+                font-size: 16px;
+            }
+
+            .event-banner {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            .event-title {
+                font-size: 20px;
+                margin-bottom: 8px;
+            }
+
+            .event-description {
+                font-size: 13px;
+                margin-bottom: 10px;
+            }
+
+            .event-detail {
+                font-size: 11px;
+                padding: 5px 10px;
+            }
+
+            .star-selection {
+                padding: 12px;
+                margin-bottom: 15px;
+            }
+
+            .star-selection h3 {
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+
+            .stat-button {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+
+            .empty {
+                font-size: 12px;
             }
         }
     </style>
