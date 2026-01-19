@@ -365,63 +365,81 @@
             overflow-y: auto;
         }
 
-        /* Mobile optimizations */
+        /* Mobile optimizations - BRUTE FORCE VERSION */
         @media (max-width: 768px) {
+            .board {
+                min-height: 500px !important;
+                margin-bottom: 30px;
+            }
+
+            .cards {
+                gap: 20px;
+                align-items: stretch;
+                justify-content: center;
+            }
+
             .card {
-                width: 160px;
-                height: auto !important;  /* Force auto height */
-                min-height: 300px !important;  /* Much taller on mobile to fit all content */
-                max-height: none !important;  /* No max height restriction */
-                padding: 12px;
-                padding-bottom: 50px;  /* Extra padding at bottom for attached cards */
+                width: 200px !important;  /* Much wider */
+                height: auto !important;
+                min-height: 400px !important;  /* MUCH taller - 400px! */
+                max-height: none !important;
+                padding: 20px !important;
+                margin-bottom: 20px;
+                font-size: 14px;
             }
 
             .card-name {
-                font-size: 16px;
-                margin-bottom: 8px;
-            }
-
-            .card-stats {
-                margin-bottom: 10px;
-                font-size: 13px;
-            }
-
-            .attached-powers {
-                margin-top: 12px !important;
-                padding-top: 10px !important;
-                display: flex !important;  /* Force display */
-                opacity: 1 !important;  /* Force visibility */
-                background: rgba(0,0,0,0.1);  /* Slight background to make it visible */
-            }
-
-            .attached-power-badge {
-                padding: 10px !important;
-                font-size: 13px !important;  /* Slightly larger on mobile */
-                margin-bottom: 5px !important;
-                min-height: 40px !important;  /* Ensure minimum height */
-                background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%) !important;
-                border: 2px solid #fff !important;
-            }
-
-            .badge-name {
-                font-size: 12px !important;
+                font-size: 20px !important;
+                margin-bottom: 12px !important;
                 font-weight: bold;
             }
 
+            .card-stats {
+                margin-bottom: 15px !important;
+                font-size: 15px !important;
+            }
+
+            .card-stat {
+                padding: 4px 0;
+            }
+
+            .attached-powers {
+                margin-top: 20px !important;
+                padding: 15px !important;
+                display: block !important;
+                opacity: 1 !important;
+                background: rgba(108, 92, 231, 0.2) !important;  /* Purple tint background */
+                border-radius: 8px;
+                border: 2px dashed rgba(255,255,255,0.5) !important;  /* Dashed border to make it obvious */
+            }
+
+            .attached-power-badge {
+                padding: 15px !important;
+                font-size: 15px !important;
+                margin-bottom: 8px !important;
+                min-height: 50px !important;
+                background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%) !important;
+                border: 3px solid #fff !important;
+                border-radius: 8px !important;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.4) !important;
+            }
+
+            .badge-name {
+                font-size: 14px !important;
+                font-weight: bold;
+                margin-bottom: 4px !important;
+            }
+
             .badge-mods {
-                font-size: 11px !important;
+                font-size: 13px !important;
                 color: #ffd700 !important;
+                font-weight: bold;
             }
 
-            /* Ensure cards container doesn't cut off content */
-            .cards {
-                gap: 15px;
-                align-items: stretch;
-            }
-
-            /* Make board containers taller */
-            .board {
-                min-height: 350px;
+            .card-button {
+                font-size: 16px !important;
+                padding: 12px !important;
+                margin-top: 15px !important;
             }
         }
     </style>
