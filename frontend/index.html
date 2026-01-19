@@ -400,6 +400,7 @@
         let currentGameState = null;
         let selectedStar = null;
         let selectedStat = null;
+        let selectedPowerCard = null;  // For targeting power cards
 
         // Utility functions
         function showMessage(message, type = 'success') {
@@ -543,17 +544,30 @@
             }
         }
 
-        async function playCard(handIndex) {
+        async function playCard(handIndex, targetStarIndex = null) {
             if (!currentGameId) return;
 
+            // Check if this is a power card that needs targeting
+            const player = currentGameState.players[0];
+            const card = player.hand[handIndex];
+
+            if (card.type !== 'StarCard' && card.targets_star && targetStarIndex === null) {
+                // This is a power card - select it for targeting
+                selectedPowerCard = handIndex;
+                showMessage(`Select a star to apply "${card.name}"`, 'info');
+                displayGameState();
+                return;
+            }
+
             try {
-                log(`Playing card at index ${handIndex}...`);
+                log(`Playing card at index ${handIndex}, target=${targetStarIndex}...`);
                 const response = await fetch(`${API_URL}/api/game/${currentGameId}/play_card`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         player_index: 0,
-                        hand_index: handIndex
+                        hand_index: handIndex,
+                        target_star_index: targetStarIndex
                     })
                 });
 
@@ -564,11 +578,13 @@
                 currentGameState = await response.json();
                 log('Card played!', currentGameState);
                 showMessage('Card played!', 'success');
+                selectedPowerCard = null;  // Clear selection
                 displayGameState();
 
             } catch (error) {
                 log('Error playing card', error);
                 showMessage('Error playing card: ' + error.message, 'error');
+                selectedPowerCard = null;
             }
         }
 
@@ -607,11 +623,20 @@
             let buttonHtml = '';
             if (handIndex !== null) {
                 buttonHtml = `<button class="card-button" onclick="playCard(${handIndex})">Play</button>`;
-            } else if (isSelectable && starIndex !== null && selectedStat) {
-                div.onclick = () => {
-                    selectedStar = starIndex;
-                    selectStarForEvent(starIndex, selectedStat);
-                };
+            } else if (isSelectable && starIndex !== null) {
+                // Star selection for events
+                if (selectedStat) {
+                    div.onclick = () => {
+                        selectedStar = starIndex;
+                        selectStarForEvent(starIndex, selectedStat);
+                    };
+                }
+                // Star selection for power card targeting
+                else if (selectedPowerCard !== null) {
+                    div.onclick = () => {
+                        playCard(selectedPowerCard, starIndex);
+                    };
+                }
             }
 
             div.innerHTML = `
@@ -674,7 +699,7 @@
             yourStarsDiv.innerHTML = '';
             if (player.stars && player.stars.length > 0) {
                 player.stars.forEach((card, index) => {
-                    const isSelectable = isEventPhase;
+                    const isSelectable = isEventPhase || selectedPowerCard !== null;
                     const isSelected = selectedStar === index;
                     yourStarsDiv.appendChild(renderCard(card, { starIndex: index, isSelectable, isSelected }));
                 });
