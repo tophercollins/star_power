@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Star Power - Event System</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="version" content="1.1.0">
+    <title>⭐ Star Power</title>
     <style>
         * {
             margin: 0;
@@ -272,45 +276,47 @@
 
         .attached-powers {
             margin-top: 10px;
-            padding-top: 8px;
-            border-top: 2px solid rgba(0,0,0,0.2);
+            padding: 8px;
+            border-top: 2px solid rgba(0,0,0,0.15);
+            background: rgba(162, 155, 254, 0.1);
+            border-radius: 6px;
             display: flex;
             flex-direction: column;
             gap: 5px;
-            flex-shrink: 0;  /* Don't allow shrinking */
-            width: 100%;  /* Take full width */
+            flex-shrink: 0;
+            width: 100%;
         }
 
         .attached-power-badge {
-            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
-            border: 2px solid rgba(255,255,255,0.6);
+            background: linear-gradient(135deg, #b19dfe 0%, #7c6ce7 100%);
+            border: 2px solid rgba(255,255,255,0.7);
             border-radius: 6px;
-            padding: 6px 8px;
+            padding: 8px 10px;
             font-size: 11px;
             color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 6px rgba(108, 92, 231, 0.4);
             transition: all 0.2s;
         }
 
         .attached-power-badge:hover {
-            transform: translateX(3px);
-            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(108, 92, 231, 0.5);
         }
 
         .badge-name {
             font-weight: bold;
-            font-size: 10px;
-            margin-bottom: 2px;
+            font-size: 11px;
+            margin-bottom: 3px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .badge-mods {
-            font-size: 9px;
-            opacity: 0.9;
+            font-size: 10px;
+            opacity: 1;
             font-weight: bold;
-            color: #ffd700;
+            color: #ffeaa7;
         }
 
         .card-button {
@@ -365,84 +371,68 @@
             overflow-y: auto;
         }
 
-        /* Mobile optimizations - NUCLEAR VERSION */
+        /* Mobile optimizations */
         @media (max-width: 768px) {
             .board {
-                min-height: 600px !important;
-                margin-bottom: 40px;
+                min-height: 400px;
+                margin-bottom: 25px;
             }
 
             .cards {
-                gap: 30px;
+                gap: 18px;
                 align-items: stretch;
                 justify-content: center;
             }
 
             .card {
-                width: 250px !important;  /* HUGE */
-                height: auto !important;
-                min-height: 500px !important;  /* MASSIVE - 500px! */
-                max-height: none !important;
-                padding: 25px !important;
-                margin-bottom: 30px;
-                font-size: 16px;
-                overflow: visible !important;
-                position: relative !important;
+                width: 190px;
+                height: auto;
+                min-height: 280px;
+                max-height: none;
+                padding: 16px;
+                margin-bottom: 15px;
+                font-size: 14px;
             }
 
             .card-name {
-                font-size: 24px !important;
-                margin-bottom: 15px !important;
-                font-weight: bold;
+                font-size: 18px;
+                margin-bottom: 10px;
             }
 
             .card-stats {
-                margin-bottom: 20px !important;
-                font-size: 17px !important;
+                margin-bottom: 12px;
+                font-size: 14px;
             }
 
             .card-stat {
-                padding: 6px 0;
+                padding: 3px 0;
             }
 
             .attached-powers {
-                margin-top: 25px !important;
-                padding: 20px !important;
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                position: relative !important;
-                z-index: 9999 !important;
-                width: 100% !important;
+                margin-top: 12px;
+                padding: 10px;
             }
 
             .attached-power-badge {
-                padding: 20px !important;
-                font-size: 18px !important;
-                margin-bottom: 12px !important;
-                min-height: 80px !important;
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                position: relative !important;
-                width: 100% !important;
+                padding: 10px;
+                font-size: 12px;
+                margin-bottom: 6px;
+                min-height: 40px;
             }
 
             .badge-name {
-                font-size: 18px !important;
-                font-weight: bold;
-                margin-bottom: 6px !important;
+                font-size: 11px;
+                margin-bottom: 3px;
             }
 
             .badge-mods {
-                font-size: 16px !important;
-                font-weight: bold;
+                font-size: 10px;
             }
 
             .card-button {
-                font-size: 18px !important;
-                padding: 15px !important;
-                margin-top: 20px !important;
+                font-size: 14px;
+                padding: 10px;
+                margin-top: 12px;
             }
         }
     </style>
@@ -734,16 +724,11 @@
             let attachedCardsHtml = '';
 
             if (card.type === 'StarCard') {
-                const powerCardsCount = (card.attached_power_cards || []).length;
-
                 statsHtml = `
                     <div class="card-stat"><span>⭐ Aura:</span><span>${card.aura}</span></div>
                     <div class="card-stat"><span>🎤 Talent:</span><span>${card.talent}</span></div>
                     <div class="card-stat"><span>📱 Influence:</span><span>${card.influence}</span></div>
                     <div class="card-stat"><span>🏆 Legacy:</span><span>${card.legacy}</span></div>
-                    <div style="background: red; color: white; padding: 10px; margin-top: 10px; font-size: 16px; font-weight: bold;">
-                        🔥 PWR: ${powerCardsCount} 🔥
-                    </div>
                 `;
 
                 // Show fans if attached
@@ -752,68 +737,24 @@
                     statsHtml += `<div class="card-fans">⭐ Fans: ${fanCount}</div>`;
                 }
 
-                // Show attached power cards - NUCLEAR VERSION
+                // Show attached power cards
                 const powerCards = card.attached_power_cards || [];
-                console.log(`[${card.name}] Attached power cards:`, powerCards.length, powerCards);
-
                 if (powerCards.length > 0) {
-                    attachedCardsHtml = `
-                        <div class="attached-powers" style="
-                            margin-top: 20px !important;
-                            padding: 20px !important;
-                            background: #FF00FF !important;
-                            border: 5px solid #FFFF00 !important;
-                            border-radius: 10px !important;
-                            min-height: 100px !important;
-                            display: block !important;
-                            width: 100% !important;
-                        ">
-                            <div style="
-                                color: #000 !important;
-                                font-size: 18px !important;
-                                font-weight: bold !important;
-                                margin-bottom: 10px !important;
-                            ">⚡ POWER CARDS (${powerCards.length}) ⚡</div>
-                    `;
-
+                    attachedCardsHtml = '<div class="attached-powers">';
                     powerCards.forEach((power, idx) => {
                         const modifiers = power.stat_modifiers ?
                             Object.entries(power.stat_modifiers)
                                 .map(([stat, val]) => `${stat.substring(0, 3)} ${val > 0 ? '+' : ''}${val}`)
                                 .join(', ')
                             : '';
-                        console.log(`  Adding badge: ${power.name} -> ${modifiers}`);
                         attachedCardsHtml += `
-                            <div class="attached-power-badge" style="
-                                padding: 20px !important;
-                                margin: 10px 0 !important;
-                                background: linear-gradient(135deg, #00FF00 0%, #00AA00 100%) !important;
-                                border: 5px solid #FFFFFF !important;
-                                border-radius: 10px !important;
-                                min-height: 80px !important;
-                                display: block !important;
-                                width: 100% !important;
-                                box-shadow: 0 0 20px rgba(255,255,0,0.8) !important;
-                            ">
-                                <div style="
-                                    font-size: 20px !important;
-                                    font-weight: bold !important;
-                                    color: #000 !important;
-                                    margin-bottom: 8px !important;
-                                ">${power.name}</div>
-                                <div style="
-                                    font-size: 18px !important;
-                                    font-weight: bold !important;
-                                    color: #FFD700 !important;
-                                ">${modifiers}</div>
+                            <div class="attached-power-badge">
+                                <div class="badge-name">${power.name}</div>
+                                <div class="badge-mods">${modifiers}</div>
                             </div>
                         `;
                     });
                     attachedCardsHtml += '</div>';
-                    console.log('Final attachedCardsHtml:', attachedCardsHtml);
-                } else {
-                    // Show "no powers" for debugging
-                    attachedCardsHtml = `<div style="color: red; font-size: 12px; margin-top: 10px;">[No powers attached]</div>`;
                 }
             } else if (card.stat_modifiers) {
                 Object.entries(card.stat_modifiers).forEach(([stat, value]) => {
