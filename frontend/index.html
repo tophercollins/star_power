@@ -205,10 +205,15 @@
             border-radius: 10px;
             padding: 15px;
             width: 180px;
+            height: auto;  /* Ensure card expands to fit content */
+            min-height: 220px;  /* Minimum height for consistency */
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             transition: all 0.2s;
             cursor: pointer;
             position: relative;
+            overflow: visible;  /* Don't hide overflow content */
+            display: flex;
+            flex-direction: column;
         }
 
         .card:hover {
@@ -247,6 +252,7 @@
         .card-stats {
             font-size: 14px;
             line-height: 1.6;
+            flex: 1;  /* Allow stats to take available space */
         }
 
         .card-stat {
@@ -355,6 +361,41 @@
             font-size: 12px;
             max-height: 300px;
             overflow-y: auto;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .card {
+                width: 160px;
+                min-height: 240px;  /* More height on mobile to show all content */
+                padding: 12px;
+            }
+
+            .attached-powers {
+                margin-top: 8px;
+                padding-top: 6px;
+            }
+
+            .attached-power-badge {
+                padding: 8px;
+                font-size: 12px;  /* Slightly larger on mobile */
+                margin-bottom: 3px;
+            }
+
+            .badge-name {
+                font-size: 11px;
+                font-weight: bold;
+            }
+
+            .badge-mods {
+                font-size: 10px;
+            }
+
+            /* Ensure cards container doesn't cut off content */
+            .cards {
+                gap: 10px;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
