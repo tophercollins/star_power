@@ -50,6 +50,21 @@ class PlayCardRequest(BaseModel):
             }
         }
 
+class SelectStarRequest(BaseModel):
+    """Request model for selecting a star for an event"""
+    player_index: int = Field(..., ge=0, le=1, description="Player index (0 or 1)")
+    star_index: int = Field(..., ge=0, description="Index of star on player's board")
+    stat: str = Field(..., description="Stat to use for contest (aura, talent, influence, or legacy)")
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "player_index": 0,
+                "star_index": 0,
+                "stat": "talent"
+            }
+        }
+
 class GameResponse(BaseModel):
     """Response model for game data"""
     game_id: str
@@ -244,4 +259,90 @@ def list_active_games():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list games: {str(e)}"
+        )
+
+@router.post(
+    "/game/{game_id}/end_turn",
+    response_model=Dict[str, Any],
+    summary="End turn",
+    description="End the current turn, draw cards, and trigger an event if applicable"
+)
+def end_turn(game_id: str):
+    """
+    End the current turn and progress the game state.
+
+    - **game_id**: Unique game identifier
+
+    Returns:
+    - Updated game state with new turn number
+    - If turn >= 2, an event will be triggered and game phase changes to "event_select"
+    """
+    try:
+        logger.info(f"Ending turn in game {game_id}")
+
+        state = game_service.end_turn(game_id)
+
+        if state is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Game not found: {game_id}"
+            )
+
+        logger.info(f"Turn ended successfully in game {game_id}")
+        return state
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error ending turn in game {game_id}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to end turn: {str(e)}"
+        )
+
+@router.post(
+    "/game/{game_id}/select_star",
+    response_model=Dict[str, Any],
+    summary="Select star for event",
+    description="Select which star and stat to use for the current event"
+)
+def select_star_for_event(game_id: str, request: SelectStarRequest):
+    """
+    Select a star and stat for the current event.
+
+    - **game_id**: Unique game identifier
+    - **player_index**: Which player (0 or 1)
+    - **star_index**: Index of star on player's board
+    - **stat**: Stat to use (aura, talent, influence, or legacy)
+
+    Returns:
+    - Updated game state with player selection recorded
+    - If both players have selected, event is automatically resolved
+    """
+    try:
+        logger.info(f"Selecting star for event in game {game_id}: player={request.player_index}, star={request.star_index}, stat={request.stat}")
+
+        state = game_service.select_star_for_event(
+            game_id=game_id,
+            player_index=request.player_index,
+            star_index=request.star_index,
+            stat=request.stat
+        )
+
+        if state is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Game not found: {game_id}"
+            )
+
+        logger.info(f"Star selected successfully in game {game_id}")
+        return state
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error selecting star in game {game_id}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to select star: {str(e)}"
         )

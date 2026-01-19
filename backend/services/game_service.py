@@ -175,6 +175,85 @@ class GameService:
         """
         return len(self.active_games)
 
+    def end_turn(self, game_id: str) -> Optional[Dict[str, Any]]:
+        """
+        End the current turn and progress game state.
+
+        Args:
+            game_id: Unique game identifier
+
+        Returns:
+            Updated game state or None if game not found
+        """
+        if game_id not in self.active_games:
+            logger.warning(f"Game not found: {game_id}")
+            return None
+
+        engine = self.active_games[game_id]
+
+        # Build END_TURN command
+        command = {
+            "type": "END_TURN",
+            "payload": {}
+        }
+
+        logger.info(f"Game {game_id}: Ending turn {engine.turn}")
+
+        # Dispatch to engine
+        try:
+            result = engine.dispatch(command)
+            logger.info(f"Game {game_id}: Turn ended, now turn {engine.turn}, phase: {engine.phase}")
+            return result
+        except Exception as e:
+            logger.error(f"Error ending turn in game {game_id}: {str(e)}", exc_info=True)
+            raise
+
+    def select_star_for_event(
+        self,
+        game_id: str,
+        player_index: int,
+        star_index: int,
+        stat: str
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Select a star and stat for the current event.
+
+        Args:
+            game_id: Unique game identifier
+            player_index: Which player (0 or 1)
+            star_index: Index of star on player's board
+            stat: Stat to use for contest
+
+        Returns:
+            Updated game state or None if game not found
+        """
+        if game_id not in self.active_games:
+            logger.warning(f"Game not found: {game_id}")
+            return None
+
+        engine = self.active_games[game_id]
+
+        # Build SELECT_STAR_FOR_EVENT command
+        command = {
+            "type": "SELECT_STAR_FOR_EVENT",
+            "payload": {
+                "player": player_index,
+                "star_index": star_index,
+                "stat": stat
+            }
+        }
+
+        logger.info(f"Game {game_id}: Player {player_index} selecting star {star_index} with stat {stat}")
+
+        # Dispatch to engine
+        try:
+            result = engine.dispatch(command)
+            logger.info(f"Game {game_id}: Star selected, phase: {engine.phase}")
+            return result
+        except Exception as e:
+            logger.error(f"Error selecting star in game {game_id}: {str(e)}", exc_info=True)
+            raise
+
 # TODO: Replace with database-backed service
 # class DatabaseGameService(GameService):
 #     """
