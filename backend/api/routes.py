@@ -41,12 +41,14 @@ class PlayCardRequest(BaseModel):
     """Request model for playing a card"""
     player_index: int = Field(..., ge=0, le=1, description="Player index (0 or 1)")
     hand_index: int = Field(..., ge=0, description="Index of card in player's hand")
+    target_star_index: Optional[int] = Field(None, ge=0, description="Index of star to target (for power cards)")
 
     class Config:
         schema_extra = {
             "example": {
                 "player_index": 0,
-                "hand_index": 2
+                "hand_index": 2,
+                "target_star_index": 0
             }
         }
 
@@ -164,17 +166,19 @@ def play_card(game_id: str, request: PlayCardRequest):
     - **game_id**: Unique game identifier
     - **player_index**: Which player (0 or 1)
     - **hand_index**: Position of card in hand to play
+    - **target_star_index**: (Optional) Index of star to target for power cards
 
     Returns:
     - Updated game state after the card is played
     """
     try:
-        logger.info(f"Playing card in game {game_id}: player={request.player_index}, card={request.hand_index}")
+        logger.info(f"Playing card in game {game_id}: player={request.player_index}, card={request.hand_index}, target={request.target_star_index}")
 
         state = game_service.play_card(
             game_id=game_id,
             player_index=request.player_index,
-            hand_index=request.hand_index
+            hand_index=request.hand_index,
+            target_star_index=request.target_star_index
         )
 
         if state is None:

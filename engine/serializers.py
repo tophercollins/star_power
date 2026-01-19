@@ -10,6 +10,13 @@ def star_card_view(card) -> dict:
         "influence": getattr(card, "influence", 0),
         "talent": getattr(card, "talent", 0),
         "legacy": getattr(card, "legacy", 0),
+        "attached_power_cards": [
+            power_card_view(p) for p in getattr(card, "attached_power_cards", [])
+        ],
+        "attached_fans": [
+            {"id": f.id, "name": f.name, "bonus": f.bonus, "tag": f.tag}
+            for f in getattr(card, "attached_fans", [])
+        ],
     }
 
 def power_card_view(card) -> dict:

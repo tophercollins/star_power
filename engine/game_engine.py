@@ -21,6 +21,10 @@ class GameEngine:
         self.current_event: Optional[Any] = None
         self.player_selections: Dict[int, Dict[str, Any]] = {}  # {player_index: {star, stat}}
 
+        # Turn-based play tracking
+        self.stars_played_this_turn: Dict[int, int] = {0: 0, 1: 0}  # {player_index: count}
+        self.powers_played_this_turn: Dict[int, int] = {0: 0, 1: 0}  # {player_index: count}
+
         # Legacy pending card (for power cards)
         self.pending_card: Optional[Dict[str, Any]] = None
 
@@ -32,6 +36,7 @@ class GameEngine:
         if action == "PLAY_CARD":
             player_index = payload.get("player", 0)
             hand_index = payload.get("hand_index")
+            target_star_index = payload.get("target_star_index")  # For power cards
 
             if 0 <= player_index < len(self.players):
                 player = self.players[player_index]
@@ -41,8 +46,27 @@ class GameEngine:
                     logger.warning(f"Invalid hand index {hand_index} for player {player.name}")
                     return self.snapshot()
 
+                card = player.hand[hand_index]
+
+                # Check turn limits based on card type
+                from engine.models.cards import StarCard, PowerCard
+                if isinstance(card, StarCard):
+                    if self.stars_played_this_turn[player_index] >= 1:
+                        logger.warning(f"Player {player.name} already played a star this turn")
+                        return self.snapshot()
+                elif isinstance(card, PowerCard):
+                    if self.powers_played_this_turn[player_index] >= 1:
+                        logger.warning(f"Player {player.name} already played a power card this turn")
+                        return self.snapshot()
+
                 # Delegate to common_ops which handles all card types
-                play_card_from_hand(player, hand_index)
+                play_card_from_hand(player, hand_index, target_star_index=target_star_index)
+
+                # Track the play
+                if isinstance(card, StarCard):
+                    self.stars_played_this_turn[player_index] += 1
+                elif isinstance(card, PowerCard):
+                    self.powers_played_this_turn[player_index] += 1
             else:
                 logger.warning(f"Invalid player index: {player_index}")
 
@@ -91,8 +115,11 @@ class GameEngine:
                 player.hand.append(card)
                 logger.info(f"{player.name} drew a card: {card.name}")
 
-        # Increment turn
+        # Increment turn and reset play counters
         self.turn += 1
+        self.stars_played_this_turn = {0: 0, 1: 0}
+        self.powers_played_this_turn = {0: 0, 1: 0}
+        logger.info(f"Turn {self.turn} started - play counters reset")
 
         # Trigger event starting from turn 2
         if self.turn >= 2 and len(self.event_deck.cards) > 0:
