@@ -370,42 +370,58 @@
             .card {
                 width: 160px;
                 height: auto !important;  /* Force auto height */
-                min-height: 260px;  /* More height on mobile to show all content */
+                min-height: 300px !important;  /* Much taller on mobile to fit all content */
                 max-height: none !important;  /* No max height restriction */
                 padding: 12px;
+                padding-bottom: 50px;  /* Extra padding at bottom for attached cards */
+            }
+
+            .card-name {
+                font-size: 16px;
+                margin-bottom: 8px;
             }
 
             .card-stats {
-                margin-bottom: 5px;
+                margin-bottom: 10px;
+                font-size: 13px;
             }
 
             .attached-powers {
-                margin-top: 8px;
-                padding-top: 6px;
+                margin-top: 12px !important;
+                padding-top: 10px !important;
                 display: flex !important;  /* Force display */
                 opacity: 1 !important;  /* Force visibility */
+                background: rgba(0,0,0,0.1);  /* Slight background to make it visible */
             }
 
             .attached-power-badge {
-                padding: 8px;
-                font-size: 13px;  /* Slightly larger on mobile */
-                margin-bottom: 3px;
-                min-height: 35px;  /* Ensure minimum height */
+                padding: 10px !important;
+                font-size: 13px !important;  /* Slightly larger on mobile */
+                margin-bottom: 5px !important;
+                min-height: 40px !important;  /* Ensure minimum height */
+                background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%) !important;
+                border: 2px solid #fff !important;
             }
 
             .badge-name {
-                font-size: 12px;
+                font-size: 12px !important;
                 font-weight: bold;
             }
 
             .badge-mods {
-                font-size: 11px;
+                font-size: 11px !important;
+                color: #ffd700 !important;
             }
 
             /* Ensure cards container doesn't cut off content */
             .cards {
-                gap: 10px;
+                gap: 15px;
                 align-items: stretch;
+            }
+
+            /* Make board containers taller */
+            .board {
+                min-height: 350px;
             }
         }
     </style>
