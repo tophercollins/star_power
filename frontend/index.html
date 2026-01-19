@@ -252,7 +252,7 @@
         .card-stats {
             font-size: 14px;
             line-height: 1.6;
-            flex: 1;  /* Allow stats to take available space */
+            flex-shrink: 0;  /* Don't let stats shrink */
         }
 
         .card-stat {
@@ -277,6 +277,8 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
+            flex-shrink: 0;  /* Don't allow shrinking */
+            width: 100%;  /* Take full width */
         }
 
         .attached-power-badge {
@@ -367,34 +369,43 @@
         @media (max-width: 768px) {
             .card {
                 width: 160px;
-                min-height: 240px;  /* More height on mobile to show all content */
+                height: auto !important;  /* Force auto height */
+                min-height: 260px;  /* More height on mobile to show all content */
+                max-height: none !important;  /* No max height restriction */
                 padding: 12px;
+            }
+
+            .card-stats {
+                margin-bottom: 5px;
             }
 
             .attached-powers {
                 margin-top: 8px;
                 padding-top: 6px;
+                display: flex !important;  /* Force display */
+                opacity: 1 !important;  /* Force visibility */
             }
 
             .attached-power-badge {
                 padding: 8px;
-                font-size: 12px;  /* Slightly larger on mobile */
+                font-size: 13px;  /* Slightly larger on mobile */
                 margin-bottom: 3px;
+                min-height: 35px;  /* Ensure minimum height */
             }
 
             .badge-name {
-                font-size: 11px;
+                font-size: 12px;
                 font-weight: bold;
             }
 
             .badge-mods {
-                font-size: 10px;
+                font-size: 11px;
             }
 
             /* Ensure cards container doesn't cut off content */
             .cards {
                 gap: 10px;
-                align-items: flex-start;
+                align-items: stretch;
             }
         }
     </style>
@@ -701,6 +712,8 @@
 
                 // Show attached power cards
                 const powerCards = card.attached_power_cards || [];
+                console.log(`[${card.name}] Attached power cards:`, powerCards.length, powerCards);
+
                 if (powerCards.length > 0) {
                     attachedCardsHtml = '<div class="attached-powers">';
                     powerCards.forEach((power, idx) => {
@@ -709,6 +722,7 @@
                                 .map(([stat, val]) => `${stat.substring(0, 3)} ${val > 0 ? '+' : ''}${val}`)
                                 .join(', ')
                             : '';
+                        console.log(`  Adding badge: ${power.name} -> ${modifiers}`);
                         attachedCardsHtml += `
                             <div class="attached-power-badge" title="${power.name}: ${modifiers}">
                                 <div class="badge-name">${power.name}</div>
@@ -717,6 +731,7 @@
                         `;
                     });
                     attachedCardsHtml += '</div>';
+                    console.log('Final attachedCardsHtml length:', attachedCardsHtml.length);
                 }
             } else if (card.stat_modifiers) {
                 Object.entries(card.stat_modifiers).forEach(([stat, value]) => {
