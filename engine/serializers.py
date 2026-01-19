@@ -71,3 +71,35 @@ def deck_view(deck: Any) -> Dict[str, Any]:
         "name": getattr(deck, "name", "Deck"),
         "size": len(deck.cards) if hasattr(deck, "cards") else 0,
     }
+
+def event_view(event: Any) -> Dict[str, Any]:
+    """Serialize event card for UI display"""
+    if event is None:
+        return None
+
+    base = {
+        "id": getattr(event, "id", None),
+        "name": getattr(event, "name", "Event"),
+        "description": getattr(event, "description", ""),
+        "event_type": getattr(event, "event_type", "basic"),
+        "fan_reward": getattr(event, "fan_reward", 1),
+    }
+
+    # Add type-specific fields
+    if hasattr(event, "stat_options"):
+        base["stat_options"] = event.stat_options
+    if hasattr(event, "contest_type"):
+        base["contest_type"] = event.contest_type
+    if hasattr(event, "required_stats"):
+        base["required_stats"] = event.required_stats
+    if hasattr(event, "required_stat"):
+        base["required_stat"] = event.required_stat
+        base["threshold"] = getattr(event, "threshold", 0)
+    if hasattr(event, "required_tags"):
+        base["required_tags"] = event.required_tags
+    if hasattr(event, "winning_stat"):
+        base["winning_stat"] = event.winning_stat
+    if hasattr(event, "fan_penalty"):
+        base["fan_penalty"] = event.fan_penalty
+
+    return base

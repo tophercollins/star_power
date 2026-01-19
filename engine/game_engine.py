@@ -1,6 +1,8 @@
 from typing import List, Dict, Any, Tuple, Optional
-from engine.serializers import player_view, deck_view
+from engine.serializers import player_view, deck_view, event_view
 from engine.rules.common_ops import play_card_from_hand
+from engine.rules.event_ops import draw_event, resolve_event, award_fans, remove_fans, count_player_fans
+from engine.rules.deck_ops import draw_card
 # from engine.rules.power_ops import attach_power_by_ids
 from engine.models.cards import StarCard, PowerCard
 import logging
@@ -13,7 +15,13 @@ class GameEngine:
         self.players = players
         self.main_deck, self.event_deck, self.fan_deck = decks
         self.turn = 1
+        self.phase = "play"  # "play", "event_select", "event_resolve"
 
+        # Event state
+        self.current_event: Optional[Any] = None
+        self.player_selections: Dict[int, Dict[str, Any]] = {}  # {player_index: {star, stat}}
+
+        # Legacy pending card (for power cards)
         self.pending_card: Optional[Dict[str, Any]] = None
 
     def dispatch(self, command: dict) -> Dict[str, Any]:
@@ -38,15 +46,128 @@ class GameEngine:
             else:
                 logger.warning(f"Invalid player index: {player_index}")
 
+        elif action == "END_TURN":
+            self._handle_end_turn()
+
+        elif action == "SELECT_STAR_FOR_EVENT":
+            player_index = payload.get("player", 0)
+            star_index = payload.get("star_index")
+            chosen_stat = payload.get("stat")
+
+            if 0 <= player_index < len(self.players):
+                player = self.players[player_index]
+
+                # Validate star selection
+                if star_index is not None and 0 <= star_index < len(player.star_cards):
+                    star = player.star_cards[star_index]
+                    self.player_selections[player_index] = {
+                        "star": star,
+                        "stat": chosen_stat
+                    }
+                    logger.info(f"Player {player_index} selected {star.name} with stat {chosen_stat}")
+
+                    # Auto-resolve if both players have selected
+                    if len(self.player_selections) == 2:
+                        self._resolve_current_event()
+                else:
+                    logger.warning(f"Invalid star index: {star_index}")
+            else:
+                logger.warning(f"Invalid player index: {player_index}")
+
+        elif action == "RESOLVE_EVENT":
+            # Manual event resolution trigger
+            self._resolve_current_event()
+
         return self.snapshot()
+
+    def _handle_end_turn(self):
+        """Handle end of turn - draw cards, trigger event if applicable"""
+        logger.info(f"Ending turn {self.turn}")
+
+        # Draw card for each player
+        for i, player in enumerate(self.players):
+            card = draw_card(self.main_deck)
+            if card:
+                player.hand.append(card)
+                logger.info(f"{player.name} drew a card: {card.name}")
+
+        # Increment turn
+        self.turn += 1
+
+        # Trigger event starting from turn 2
+        if self.turn >= 2 and len(self.event_deck.cards) > 0:
+            self.current_event = draw_event(self.event_deck)
+            self.phase = "event_select"
+            self.player_selections = {}
+            logger.info(f"Event triggered: {self.current_event.name}")
+        else:
+            self.phase = "play"
+
+    def _resolve_current_event(self):
+        """Resolve the current event with player selections"""
+        if not self.current_event:
+            logger.warning("No active event to resolve")
+            return
+
+        # Get player selections
+        p1_selection = self.player_selections.get(0, {})
+        p2_selection = self.player_selections.get(1, {})
+
+        p1_star = p1_selection.get("star")
+        p1_stat = p1_selection.get("stat")
+        p2_star = p2_selection.get("star")
+        p2_stat = p2_selection.get("stat")
+
+        # Resolve the event
+        result = resolve_event(
+            self.current_event,
+            p1_star, p2_star,
+            p1_stat, p2_stat,
+            self.fan_deck
+        )
+
+        # Award/remove fans based on result
+        if result["player1_fans_won"] > 0:
+            fans = award_fans(self.players[0], self.fan_deck, result["player1_fans_won"])
+            # Attach to the star that competed
+            if p1_star and fans:
+                p1_star.attached_fans.extend(fans)
+
+        if result["player2_fans_won"] > 0:
+            fans = award_fans(self.players[1], self.fan_deck, result["player2_fans_won"])
+            if p2_star and fans:
+                p2_star.attached_fans.extend(fans)
+
+        if result["player1_fans_lost"] > 0:
+            remove_fans(self.players[0], result["player1_fans_lost"])
+
+        if result["player2_fans_lost"] > 0:
+            remove_fans(self.players[1], result["player2_fans_lost"])
+
+        logger.info(f"Event resolved: {result['description']}")
+
+        # Clear event state
+        self.current_event = None
+        self.player_selections = {}
+        self.phase = "play"
 
     def snapshot(self) -> Dict[str, Any]:
         return {
             "turn": self.turn,
+            "phase": self.phase,
+            "current_event": event_view(self.current_event),
+            "player_selections": {
+                str(k): {"star_id": v["star"].id if "star" in v else None, "stat": v.get("stat")}
+                for k, v in self.player_selections.items()
+            },
             "players": [player_view(player, player_index=i) for i, player in enumerate(self.players)],
             "main_deck": deck_view(self.main_deck),
             "event_deck": deck_view(self.event_deck),
             "fan_deck": deck_view(self.fan_deck),
+            "fan_counts": {
+                "player1": count_player_fans(self.players[0]),
+                "player2": count_player_fans(self.players[1])
+            }
         }
     
     
