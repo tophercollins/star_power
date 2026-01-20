@@ -143,10 +143,25 @@ class GameEngine:
             self._advance_to_next_turn()
 
     def _resolve_current_event(self):
-        """Resolve the current event with player selections"""
+        """Resolve the current event with player selections
+
+        Exhaustion flow:
+        1. FIRST: Refresh all currently exhausted stars
+        2. THEN: Resolve event with selected stars
+        3. THEN: Mark participating stars as exhausted
+        """
         if not self.current_event:
             logger.warning("No active event to resolve")
             return
+
+        # STEP 1: Reset exhaustion for all stars BEFORE event resolution
+        # This happens at the start of the event phase, after all players have taken their turns
+        logger.info("Refreshing exhausted stars before event resolution...")
+        for player in self.players:
+            for star in player.star_cards:
+                if star.exhausted:
+                    star.exhausted = False
+                    logger.info(f"{star.name} is no longer exhausted")
 
         # Get player selections
         p1_selection = self.player_selections.get(0, {})
@@ -157,7 +172,7 @@ class GameEngine:
         p2_star = p2_selection.get("star")
         p2_stat = p2_selection.get("stat")
 
-        # Resolve the event
+        # STEP 2: Resolve the event
         result = resolve_event(
             self.current_event,
             p1_star, p2_star,
@@ -184,6 +199,9 @@ class GameEngine:
             remove_fans(self.players[1], result["player2_fans_lost"])
 
         logger.info(f"Event resolved: {result['description']}")
+
+        # STEP 3: Mark participating stars as exhausted
+        # (This happens in resolve_event in event_ops.py)
 
         # Check for game over
         self._check_win_condition()
@@ -243,14 +261,6 @@ class GameEngine:
 
         # Draw NEXT event if turn >= 2 (so it's visible when turn starts)
         if self.turn >= 2 and len(self.event_deck.cards) > 0:
-            # Reset star exhaustion BEFORE drawing new event
-            # This ensures stars are exhausted for exactly one event cycle
-            for player in self.players:
-                for star in player.star_cards:
-                    if star.exhausted:
-                        star.exhausted = False
-                        logger.info(f"{star.name} is no longer exhausted")
-
             # Draw the event for this turn
             self.current_event = draw_event(self.event_deck)
             logger.info(f"Event drawn for turn {self.turn}: {self.current_event.name}")
