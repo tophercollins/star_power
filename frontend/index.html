@@ -607,7 +607,8 @@
                 <div class="info-section">
                     <strong>Game ID:</strong> <span id="gameId">-</span><br>
                     <strong>Turn:</strong> <span id="turn">-</span><br>
-                    <strong>Phase:</strong> <span id="phase">play</span>
+                    <strong>Phase:</strong> <span id="phase">play</span><br>
+                    <strong>First Player:</strong> <span id="firstPlayer">-</span>
                 </div>
                 <div class="info-section">
                     <strong>Decks:</strong><br>
@@ -980,6 +981,11 @@
             document.getElementById('eventDeck').textContent = currentGameState.event_deck?.size || 0;
             document.getElementById('fanDeck').textContent = currentGameState.fan_deck?.size || 0;
 
+            // Show who goes first this turn
+            const firstPlayerIndex = currentGameState.first_player_index || 0;
+            const firstPlayerName = currentGameState.players?.[firstPlayerIndex]?.name || '-';
+            document.getElementById('firstPlayer').textContent = firstPlayerName;
+
             // Update fan counts
             document.getElementById('yourFans').textContent = currentGameState.fan_counts?.player1 || 0;
             document.getElementById('opponentFans').textContent = currentGameState.fan_counts?.player2 || 0;
@@ -1064,7 +1070,8 @@
             const phase = currentGameState.phase || 'play';
             const eventContainer = document.getElementById('eventContainer');
 
-            if (!event || phase !== 'event_select') {
+            // Show event if it exists (except during game over)
+            if (!event || phase === 'game_over') {
                 eventContainer.classList.add('hidden');
                 selectedStar = null;
                 selectedStat = null;
@@ -1073,8 +1080,10 @@
 
             eventContainer.classList.remove('hidden');
 
-            // Event details
-            document.getElementById('eventName').textContent = `⚡ ${event.name} ⚡`;
+            // Event details with phase indicator
+            const isEventSelect = phase === 'event_select';
+            const eventPhaseText = isEventSelect ? '🎯 SELECT YOUR STAR!' : '📋 THIS TURN\'S EVENT';
+            document.getElementById('eventName').textContent = `${eventPhaseText}\n⚡ ${event.name} ⚡`;
             document.getElementById('eventDescription').textContent = event.description;
 
             const detailsDiv = document.getElementById('eventDetails');

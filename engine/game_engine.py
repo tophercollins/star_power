@@ -27,6 +27,9 @@ class GameEngine:
         self.stars_played_this_turn: Dict[int, int] = {0: 0, 1: 0}  # {player_index: count}
         self.powers_played_this_turn: Dict[int, int] = {0: 0, 1: 0}  # {player_index: count}
 
+        # Turn order rotation - tracks which player goes first each turn
+        self.first_player_index: int = 0  # Alternates each turn
+
         # Legacy pending card (for power cards)
         self.pending_card: Optional[Dict[str, Any]] = None
 
@@ -114,45 +117,27 @@ class GameEngine:
         return self.snapshot()
 
     def _handle_end_turn(self):
-        """Handle end of turn - draw cards, trigger event if applicable, let computer play"""
+        """Handle end of turn - computer plays, event resolves, then prep next turn
+
+        Flow:
+        - Turn 1: Computer plays → Advance to turn 2 (draw event for turn 2)
+        - Turn 2+: Computer plays → Computer selects for event → (Human selects) → Event resolves → Advance to next turn
+        """
         logger.info(f"Ending turn {self.turn}")
 
-        # Draw card for each player
-        for i, player in enumerate(self.players):
-            card = draw_card(self.main_deck)
-            if card:
-                player.hand.append(card)
-                logger.info(f"{player.name} drew a card: {card.name}")
-
-        # Increment turn and reset play counters
-        self.turn += 1
-        self.stars_played_this_turn = {0: 0, 1: 0}
-        self.powers_played_this_turn = {0: 0, 1: 0}
-        logger.info(f"Turn {self.turn} started - play counters reset")
-
-        # Computer AI takes its turn
+        # Computer AI takes its turn (seeing current event if it exists)
         logger.info("Computer AI taking turn...")
         self.computer_ai.take_turn(self)
 
-        # Trigger event starting from turn 2
-        if self.turn >= 2 and len(self.event_deck.cards) > 0:
-            # Reset star exhaustion BEFORE triggering new event
-            # This ensures stars are exhausted for exactly one event cycle
-            for player in self.players:
-                for star in player.star_cards:
-                    if star.exhausted:
-                        star.exhausted = False
-                        logger.info(f"{star.name} is no longer exhausted")
-
-            self.current_event = draw_event(self.event_deck)
+        # If there's an active event, computer selects for it
+        if self.current_event:
             self.phase = "event_select"
-            self.player_selections = {}
-            logger.info(f"Event triggered: {self.current_event.name}")
-
-            # Computer AI auto-selects for event
             self._computer_select_for_event()
+            # Note: Event will resolve after human selects via SELECT_STAR_FOR_EVENT action
+            # _resolve_current_event() will call _advance_to_next_turn() when done
         else:
-            self.phase = "play"
+            # Turn 1: No event yet, just advance to next turn
+            self._advance_to_next_turn()
 
     def _resolve_current_event(self):
         """Resolve the current event with player selections"""
@@ -208,7 +193,8 @@ class GameEngine:
         if self.phase == "game_over":
             return  # Keep game_over phase
         else:
-            self.phase = "play"
+            # Advance to next turn
+            self._advance_to_next_turn()
 
     def _check_win_condition(self):
         """Check if any player has reached the win condition"""
@@ -227,6 +213,47 @@ class GameEngine:
             self.phase = "game_over"
             self.game_over_reason = f"{self.players[1].name} wins with {player2_fans} fans!"
             logger.info(f"GAME OVER: {self.game_over_reason}")
+
+    def _advance_to_next_turn(self):
+        """Advance to next turn - draw cards, increment turn, draw next event
+
+        This happens AFTER event resolution, preparing for the next turn.
+        """
+        # Draw cards for both players
+        for i, player in enumerate(self.players):
+            card = draw_card(self.main_deck)
+            if card:
+                player.hand.append(card)
+                logger.info(f"{player.name} drew a card: {card.name}")
+
+        # Increment turn
+        self.turn += 1
+        logger.info(f"Turn {self.turn} started")
+
+        # Rotate first player (alternates each turn)
+        self.first_player_index = (self.first_player_index + 1) % len(self.players)
+        logger.info(f"First player this turn: {self.players[self.first_player_index].name}")
+
+        # Reset play counters
+        self.stars_played_this_turn = {0: 0, 1: 0}
+        self.powers_played_this_turn = {0: 0, 1: 0}
+
+        # Draw NEXT event if turn >= 2 (so it's visible when turn starts)
+        if self.turn >= 2 and len(self.event_deck.cards) > 0:
+            # Reset star exhaustion BEFORE drawing new event
+            # This ensures stars are exhausted for exactly one event cycle
+            for player in self.players:
+                for star in player.star_cards:
+                    if star.exhausted:
+                        star.exhausted = False
+                        logger.info(f"{star.name} is no longer exhausted")
+
+            # Draw the event for this turn
+            self.current_event = draw_event(self.event_deck)
+            logger.info(f"Event drawn for turn {self.turn}: {self.current_event.name}")
+
+        # Set phase to play
+        self.phase = "play"
 
     def _computer_select_for_event(self):
         """Have computer AI automatically select for event"""
@@ -256,6 +283,7 @@ class GameEngine:
         return {
             "turn": self.turn,
             "phase": self.phase,
+            "first_player_index": self.first_player_index,
             "current_event": event_view(self.current_event),
             "player_selections": {
                 str(k): {"star_id": v["star"].id if "star" in v else None, "stat": v.get("stat")}
