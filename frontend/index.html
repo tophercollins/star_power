@@ -937,20 +937,20 @@
             if (handIndex !== null) {
                 buttonHtml = `<button class="card-button" onclick="playCard(${handIndex})">Play</button>`;
             } else if (isSelectable && starIndex !== null && !card.exhausted) {
-                // Star selection for events (only if not exhausted)
-                if (selectedStat) {
+                // Star selection for power card targeting (PRIORITY)
+                if (selectedPowerCard !== null) {
+                    div.onclick = () => {
+                        playCard(selectedPowerCard, starIndex);
+                    };
+                }
+                // Star selection for events (FALLBACK if no power card selected)
+                else if (selectedStat) {
                     div.onclick = () => {
                         selectedStar = starIndex;
                         selectStarForEvent(starIndex, selectedStat);
                     };
                     // Add visual indicator that this star is clickable for event
                     buttonHtml = `<button class="card-button" style="background: #27ae60;" onclick="event.stopPropagation(); selectStarForEvent(${starIndex}, '${selectedStat}')">Use in Event</button>`;
-                }
-                // Star selection for power card targeting
-                else if (selectedPowerCard !== null) {
-                    div.onclick = () => {
-                        playCard(selectedPowerCard, starIndex);
-                    };
                 }
             }
 
