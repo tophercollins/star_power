@@ -245,6 +245,28 @@
             background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
         }
 
+        .card.exhausted {
+            opacity: 0.6;
+            filter: grayscale(50%);
+            position: relative;
+        }
+
+        .card.exhausted::after {
+            content: '😴 EXHAUSTED';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
         .card-name {
             font-size: 18px;
             font-weight: bold;
@@ -861,7 +883,8 @@
             const div = document.createElement('div');
             let classes = ['card'];
             classes.push(card.type === 'StarCard' ? 'star-card' : 'power-card');
-            if (isSelectable) classes.push('selectable');
+            if (card.exhausted) classes.push('exhausted');
+            if (isSelectable && !card.exhausted) classes.push('selectable');
             if (isSelected) classes.push('selected');
 
             div.className = classes.join(' ');
@@ -912,8 +935,8 @@
             let buttonHtml = '';
             if (handIndex !== null) {
                 buttonHtml = `<button class="card-button" onclick="playCard(${handIndex})">Play</button>`;
-            } else if (isSelectable && starIndex !== null) {
-                // Star selection for events
+            } else if (isSelectable && starIndex !== null && !card.exhausted) {
+                // Star selection for events (only if not exhausted)
                 if (selectedStat) {
                     div.onclick = () => {
                         selectedStar = starIndex;

@@ -33,7 +33,7 @@ def draw_event(event_deck: Deck) -> Optional[EventCard]:
 def can_star_participate(star: StarCard, event: EventCard) -> Tuple[bool, str]:
     """
     Check if a star can participate in an event.
-    Simplified - all stars can participate in basic stat contests.
+    Checks if star is exhausted from previous event.
 
     Args:
         star: The star card
@@ -42,7 +42,10 @@ def can_star_participate(star: StarCard, event: EventCard) -> Tuple[bool, str]:
     Returns:
         Tuple of (can_participate, reason)
     """
-    # All stars can participate in simple stat contests
+    # Check if star is exhausted
+    if star.exhausted:
+        return False, f"{star.name} is exhausted from the previous event"
+
     return True, "Star can participate"
 
 
@@ -174,6 +177,14 @@ def resolve_event(
 
     logger.info(f"Event resolved: {result['description']}")
     logger.info(f"Scores - P1: {result['player1_score']}, P2: {result['player2_score']}")
+
+    # Mark participating stars as exhausted
+    if player1_participates and player1_star:
+        player1_star.exhausted = True
+        logger.info(f"{player1_star.name} is now exhausted")
+    if player2_participates and player2_star:
+        player2_star.exhausted = True
+        logger.info(f"{player2_star.name} is now exhausted")
 
     return result
 

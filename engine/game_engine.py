@@ -130,6 +130,13 @@ class GameEngine:
         self.powers_played_this_turn = {0: 0, 1: 0}
         logger.info(f"Turn {self.turn} started - play counters reset")
 
+        # Reset star exhaustion
+        for player in self.players:
+            for star in player.star_cards:
+                if star.exhausted:
+                    star.exhausted = False
+                    logger.info(f"{star.name} is no longer exhausted")
+
         # Computer AI takes its turn
         logger.info("Computer AI taking turn...")
         self.computer_ai.take_turn(self)

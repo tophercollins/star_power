@@ -111,9 +111,18 @@ class ComputerPlayer:
             logger.info(f"{player.name} has no stars to compete in event")
             return None
 
-        # Pick random star
-        star_index = random.randint(0, len(player.star_cards) - 1)
-        star = player.star_cards[star_index]
+        # Filter out exhausted stars
+        available_stars = [
+            (i, star) for i, star in enumerate(player.star_cards)
+            if not star.exhausted
+        ]
+
+        if not available_stars:
+            logger.info(f"{player.name} has no non-exhausted stars available")
+            return None
+
+        # Pick random non-exhausted star
+        star_index, star = random.choice(available_stars)
 
         # Determine available stats for this event
         stat = self._choose_stat_for_event(event, star)

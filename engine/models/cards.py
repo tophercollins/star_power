@@ -14,6 +14,7 @@ class StarCard:
     tags: List[str] = field(default_factory=list)
     attached_fans: List[FanCard] = field(default_factory=list)
     attached_power_cards: List[PowerCard] = field(default_factory=list)
+    exhausted: bool = False  # Star cannot compete in next event after participating
 
 
 @dataclass
