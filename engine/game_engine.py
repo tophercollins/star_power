@@ -6,6 +6,7 @@ from engine.rules.deck_ops import draw_card
 # from engine.rules.power_ops import attach_power_by_ids
 from engine.models.cards import StarCard, PowerCard
 from engine.ai import ComputerPlayer
+from resources.config import GAME_CONFIG
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ class GameEngine:
         self.players = players
         self.main_deck, self.event_deck, self.fan_deck = decks
         self.turn = 1
-        self.phase = "play"  # "play", "event_select", "event_resolve"
+        self.phase = "play"  # "play", "event_select", "event_resolve", "game_over"
 
         # Event state
         self.current_event: Optional[Any] = None
@@ -31,6 +32,10 @@ class GameEngine:
 
         # Computer AI
         self.computer_ai = ComputerPlayer(player_index=1)
+
+        # Game ending state
+        self.winner: Optional[int] = None
+        self.game_over_reason: Optional[str] = None
 
     def dispatch(self, command: dict) -> Dict[str, Any]:
         action = command.get("type")
@@ -184,10 +189,36 @@ class GameEngine:
 
         logger.info(f"Event resolved: {result['description']}")
 
+        # Check for game over
+        self._check_win_condition()
+
         # Clear event state
         self.current_event = None
         self.player_selections = {}
-        self.phase = "play"
+
+        # Set phase based on game state
+        if self.phase == "game_over":
+            return  # Keep game_over phase
+        else:
+            self.phase = "play"
+
+    def _check_win_condition(self):
+        """Check if any player has reached the win condition"""
+        fans_to_win = GAME_CONFIG["fans_to_win"]
+
+        player1_fans = count_player_fans(self.players[0])
+        player2_fans = count_player_fans(self.players[1])
+
+        if player1_fans >= fans_to_win:
+            self.winner = 0
+            self.phase = "game_over"
+            self.game_over_reason = f"{self.players[0].name} wins with {player1_fans} fans!"
+            logger.info(f"GAME OVER: {self.game_over_reason}")
+        elif player2_fans >= fans_to_win:
+            self.winner = 1
+            self.phase = "game_over"
+            self.game_over_reason = f"{self.players[1].name} wins with {player2_fans} fans!"
+            logger.info(f"GAME OVER: {self.game_over_reason}")
 
     def _computer_select_for_event(self):
         """Have computer AI automatically select for event"""
@@ -229,7 +260,11 @@ class GameEngine:
             "fan_counts": {
                 "player1": count_player_fans(self.players[0]),
                 "player2": count_player_fans(self.players[1])
-            }
+            },
+            "game_over": self.phase == "game_over",
+            "winner": self.winner,
+            "game_over_reason": self.game_over_reason,
+            "fans_to_win": GAME_CONFIG["fans_to_win"]
         }
 
     

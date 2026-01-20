@@ -371,6 +371,53 @@
             overflow-y: auto;
         }
 
+        .game-over-banner {
+            background: linear-gradient(135deg, #ffd700 0%, #ff8800 100%);
+            border: 5px solid #fff;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: victoryPulse 1.5s infinite;
+        }
+
+        @keyframes victoryPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+            50% { transform: scale(1.02); box-shadow: 0 15px 40px rgba(255,215,0,0.8); }
+        }
+
+        .game-over-title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #2d3436;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.5);
+        }
+
+        .game-over-message {
+            font-size: 28px;
+            color: #2d3436;
+            margin-bottom: 30px;
+        }
+
+        .new-game-button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .new-game-button:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
         /* Mobile optimizations - 3 cards fit horizontally */
         @media (max-width: 768px) {
             body {
@@ -547,8 +594,17 @@
                     Fan: <span id="fanDeck">0</span>
                 </div>
                 <div class="info-section">
-                    <strong>Your Fans:</strong> <span class="fan-counter" id="yourFans">0</span><br>
-                    <strong>Opponent Fans:</strong> <span class="fan-counter" id="opponentFans">0</span>
+                    <strong>Your Fans:</strong> <span class="fan-counter" id="yourFans">0</span> / <span id="fansToWin">5</span><br>
+                    <strong>Opponent Fans:</strong> <span class="fan-counter" id="opponentFans">0</span> / <span id="fansToWin2">5</span>
+                </div>
+            </div>
+
+            <!-- Game Over Display -->
+            <div id="gameOverContainer" class="hidden">
+                <div class="game-over-banner">
+                    <div class="game-over-title">🏆 GAME OVER! 🏆</div>
+                    <div class="game-over-message" id="gameOverMessage">Winner!</div>
+                    <button class="new-game-button" onclick="createGame()">🎮 New Game</button>
                 </div>
             </div>
 
@@ -821,10 +877,11 @@
                     <div class="card-stat"><span>🏆 Legacy:</span><span>${card.legacy}</span></div>
                 `;
 
-                // Show fans if attached
+                // Show fans if attached (mini person emojis)
                 const fanCount = card.attached_fans?.length || 0;
                 if (fanCount > 0) {
-                    statsHtml += `<div class="card-fans">⭐ Fans: ${fanCount}</div>`;
+                    const fanEmojis = '👤'.repeat(fanCount);
+                    statsHtml += `<div class="card-fans">${fanEmojis}</div>`;
                 }
 
                 // Show attached power cards
@@ -903,9 +960,22 @@
             // Update fan counts
             document.getElementById('yourFans').textContent = currentGameState.fan_counts?.player1 || 0;
             document.getElementById('opponentFans').textContent = currentGameState.fan_counts?.player2 || 0;
+            document.getElementById('fansToWin').textContent = currentGameState.fans_to_win || 5;
+            document.getElementById('fansToWin2').textContent = currentGameState.fans_to_win || 5;
 
-            // Enable/disable end turn button
-            document.getElementById('endTurnBtn').disabled = isEventPhase;
+            // Handle game over
+            const gameOverContainer = document.getElementById('gameOverContainer');
+            if (currentGameState.game_over) {
+                gameOverContainer.classList.remove('hidden');
+                document.getElementById('gameOverMessage').textContent = currentGameState.game_over_reason || 'Game Over!';
+                document.getElementById('endTurnBtn').disabled = true;
+                // Hide event display if it was showing
+                document.getElementById('eventContainer').classList.add('hidden');
+            } else {
+                gameOverContainer.classList.add('hidden');
+                // Enable/disable end turn button based on phase
+                document.getElementById('endTurnBtn').disabled = isEventPhase;
+            }
 
             const players = currentGameState.players || [];
             const player = players[0] || {};
