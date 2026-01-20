@@ -130,19 +130,20 @@ class GameEngine:
         self.powers_played_this_turn = {0: 0, 1: 0}
         logger.info(f"Turn {self.turn} started - play counters reset")
 
-        # Reset star exhaustion
-        for player in self.players:
-            for star in player.star_cards:
-                if star.exhausted:
-                    star.exhausted = False
-                    logger.info(f"{star.name} is no longer exhausted")
-
         # Computer AI takes its turn
         logger.info("Computer AI taking turn...")
         self.computer_ai.take_turn(self)
 
         # Trigger event starting from turn 2
         if self.turn >= 2 and len(self.event_deck.cards) > 0:
+            # Reset star exhaustion BEFORE triggering new event
+            # This ensures stars are exhausted for exactly one event cycle
+            for player in self.players:
+                for star in player.star_cards:
+                    if star.exhausted:
+                        star.exhausted = False
+                        logger.info(f"{star.name} is no longer exhausted")
+
             self.current_event = draw_event(self.event_deck)
             self.phase = "event_select"
             self.player_selections = {}
