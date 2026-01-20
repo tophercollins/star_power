@@ -100,11 +100,8 @@ class GameEngine:
                         "star": star,
                         "stat": chosen_stat
                     }
-                    logger.info(f"Player {player_index} selected {star.name} with stat {chosen_stat}")
-
-                    # Auto-resolve if both players have selected
-                    if len(self.player_selections) == 2:
-                        self._resolve_current_event()
+                    logger.info(f"Player {player_index} selected {star.name} with stat {chosen_stat} for event")
+                    # Note: Event will resolve when both players have selected (triggered by End Turn)
                 else:
                     logger.warning(f"Invalid star index: {star_index}")
             else:
@@ -117,11 +114,13 @@ class GameEngine:
         return self.snapshot()
 
     def _handle_end_turn(self):
-        """Handle end of turn - computer plays, event resolves, then prep next turn
+        """Handle end of turn - computer plays, selects star, event resolves
 
         Flow:
         - Turn 1: Computer plays → Advance to turn 2 (draw event for turn 2)
-        - Turn 2+: Computer plays → Computer selects for event → (Human selects) → Event resolves → Advance to next turn
+        - Turn 2+: Player selects star (already done) → Computer plays + selects star → Event resolves → Advance to next turn
+
+        Star selection is part of each player's turn, done during play phase.
         """
         logger.info(f"Ending turn {self.turn}")
 
@@ -129,12 +128,16 @@ class GameEngine:
         logger.info("Computer AI taking turn...")
         self.computer_ai.take_turn(self)
 
-        # If there's an active event, computer selects for it
+        # If there's an active event, computer selects for it (as last part of their turn)
         if self.current_event:
-            self.phase = "event_select"
             self._computer_select_for_event()
-            # Note: Event will resolve after human selects via SELECT_STAR_FOR_EVENT action
-            # _resolve_current_event() will call _advance_to_next_turn() when done
+            # Both players should have selected by now, resolve event
+            if len(self.player_selections) == 2:
+                self._resolve_current_event()
+            else:
+                logger.warning(f"Event exists but not all players selected (selections: {len(self.player_selections)})")
+                # Resolve anyway with whoever selected
+                self._resolve_current_event()
         else:
             # Turn 1: No event yet, just advance to next turn
             self._advance_to_next_turn()

@@ -971,7 +971,8 @@
             document.getElementById('gameContainer').classList.remove('hidden');
 
             const phase = currentGameState.phase || 'play';
-            const isEventPhase = phase === 'event_select';
+            const hasEvent = currentGameState.current_event !== null && currentGameState.current_event !== undefined;
+            const playerHasSelected = currentGameState.player_selections?.['0'] !== undefined;
 
             // Update game info
             document.getElementById('gameId').textContent = currentGameId.substring(0, 8) + '...';
@@ -1002,8 +1003,8 @@
                 document.getElementById('eventContainer').classList.add('hidden');
             } else {
                 gameOverContainer.classList.add('hidden');
-                // Enable/disable end turn button based on phase
-                document.getElementById('endTurnBtn').disabled = isEventPhase;
+                // End turn is always enabled (player can end turn without selecting if they want)
+                document.getElementById('endTurnBtn').disabled = false;
             }
 
             const players = currentGameState.players || [];
@@ -1045,7 +1046,8 @@
             yourStarsDiv.innerHTML = '';
             if (player.stars && player.stars.length > 0) {
                 player.stars.forEach((card, index) => {
-                    const isSelectable = isEventPhase || selectedPowerCard !== null;
+                    // Stars are selectable if there's an event (for event selection) or if selecting target for power card
+                    const isSelectable = (hasEvent && !playerHasSelected) || selectedPowerCard !== null;
                     const isSelected = selectedStar === index;
                     yourStarsDiv.appendChild(renderCard(card, { starIndex: index, isSelectable, isSelected }));
                 });
@@ -1080,9 +1082,9 @@
 
             eventContainer.classList.remove('hidden');
 
-            // Event details with phase indicator
-            const isEventSelect = phase === 'event_select';
-            const eventPhaseText = isEventSelect ? '🎯 SELECT YOUR STAR!' : '📋 THIS TURN\'S EVENT';
+            // Event details - check if player has already selected
+            const playerHasSelected = currentGameState.player_selections?.['0'] !== undefined;
+            const eventPhaseText = playerHasSelected ? '✅ STAR SELECTED!' : '🎯 SELECT YOUR STAR FOR EVENT';
             document.getElementById('eventName').textContent = `${eventPhaseText}\n⚡ ${event.name} ⚡`;
             document.getElementById('eventDescription').textContent = event.description;
 
