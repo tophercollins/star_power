@@ -936,21 +936,28 @@
             let buttonHtml = '';
             if (handIndex !== null) {
                 buttonHtml = `<button class="card-button" onclick="playCard(${handIndex})">Play</button>`;
-            } else if (isSelectable && starIndex !== null && !card.exhausted) {
-                // Star selection for power card targeting (PRIORITY)
-                if (selectedPowerCard !== null) {
-                    div.onclick = () => {
-                        playCard(selectedPowerCard, starIndex);
-                    };
+            } else if (starIndex !== null) {
+                // Check if star is exhausted and there's an event (show exhaustion message)
+                if (card.exhausted && selectedStat) {
+                    buttonHtml = `<div style="background: rgba(0,0,0,0.7); color: #ccc; padding: 8px; border-radius: 5px; text-align: center; font-size: 11px; margin-top: 5px;">😴 EXHAUSTED</div>`;
                 }
-                // Star selection for events (FALLBACK if no power card selected)
-                else if (selectedStat) {
-                    div.onclick = () => {
-                        selectedStar = starIndex;
-                        selectStarForEvent(starIndex, selectedStat);
-                    };
-                    // Add visual indicator that this star is clickable for event
-                    buttonHtml = `<button class="card-button" style="background: #27ae60;" onclick="event.stopPropagation(); selectStarForEvent(${starIndex}, '${selectedStat}')">Use in Event</button>`;
+                // Star is selectable (not exhausted or selecting for power card)
+                else if (isSelectable && !card.exhausted) {
+                    // Star selection for power card targeting (PRIORITY)
+                    if (selectedPowerCard !== null) {
+                        div.onclick = () => {
+                            playCard(selectedPowerCard, starIndex);
+                        };
+                    }
+                    // Star selection for events (FALLBACK if no power card selected)
+                    else if (selectedStat) {
+                        div.onclick = () => {
+                            selectedStar = starIndex;
+                            selectStarForEvent(starIndex, selectedStat);
+                        };
+                        // Add visual indicator that this star is clickable for event
+                        buttonHtml = `<button class="card-button" style="background: #27ae60;" onclick="event.stopPropagation(); selectStarForEvent(${starIndex}, '${selectedStat}')">Use in Event</button>`;
+                    }
                 }
             }
 
@@ -1046,8 +1053,11 @@
             yourStarsDiv.innerHTML = '';
             if (player.stars && player.stars.length > 0) {
                 player.stars.forEach((card, index) => {
-                    // Stars are selectable if there's an event (for event selection) or if selecting target for power card
-                    const isSelectable = (hasEvent && !playerHasSelected) || selectedPowerCard !== null;
+                    // Stars are selectable for events only if not exhausted
+                    // Power cards can still target exhausted stars
+                    const selectableForEvent = hasEvent && !playerHasSelected && !card.exhausted;
+                    const selectableForPower = selectedPowerCard !== null;
+                    const isSelectable = selectableForEvent || selectableForPower;
                     const isSelected = selectedStar === index;
                     yourStarsDiv.appendChild(renderCard(card, { starIndex: index, isSelectable, isSelected }));
                 });
