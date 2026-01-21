@@ -598,6 +598,7 @@
             <button onclick="endTurn()" class="end-turn" id="endTurnBtn" disabled>🔄 End Turn</button>
             <button onclick="refreshGameState()">🔄 Refresh</button>
             <button onclick="toggleDebug()">🐛 Debug</button>
+            <button onclick="exportLogs()">📋 Export Logs</button>
         </div>
 
         <div id="message" class="hidden"></div>
@@ -691,6 +692,7 @@
         let selectedStat = null;
         let selectedPowerCard = null;  // For targeting power cards
         let replacingStarFromHand = null;  // Hand index of star card to play when replacing
+        let debugLogs = [];  // Store all logs for export
 
         // Utility functions
         function showMessage(message, type = 'success') {
@@ -701,9 +703,16 @@
         }
 
         function log(message, data = null) {
+            const time = new Date().toLocaleTimeString();
+            const logEntry = {
+                time: time,
+                message: message,
+                data: data
+            };
+            debugLogs.push(logEntry);
+
             console.log(message, data);
             const debugEl = document.getElementById('debugOutput');
-            const time = new Date().toLocaleTimeString();
             debugEl.innerHTML += `<div>[${time}] ${message}</div>`;
             if (data) {
                 debugEl.innerHTML += `<div style="margin-left: 20px; color: #aaa;">${JSON.stringify(data, null, 2)}</div>`;
@@ -713,6 +722,45 @@
 
         function toggleDebug() {
             document.getElementById('debugOutput').classList.toggle('hidden');
+        }
+
+        async function exportLogs() {
+            // Collect all console logs and debug logs
+            let logText = '=== STAR POWER DEBUG LOGS ===\n';
+            logText += `Export Time: ${new Date().toISOString()}\n`;
+            logText += `Game ID: ${currentGameId || 'None'}\n`;
+            logText += `Turn: ${currentGameState?.turn || 'N/A'}\n`;
+            logText += `Phase: ${currentGameState?.phase || 'N/A'}\n\n`;
+
+            logText += '=== DEBUG LOGS ===\n';
+            debugLogs.forEach(entry => {
+                logText += `[${entry.time}] ${entry.message}\n`;
+                if (entry.data) {
+                    logText += `  ${JSON.stringify(entry.data, null, 2)}\n`;
+                }
+            });
+
+            // Copy to clipboard
+            try {
+                await navigator.clipboard.writeText(logText);
+                showMessage('✅ Logs copied to clipboard!', 'success');
+            } catch (err) {
+                // Fallback for browsers that don't support clipboard API
+                const textArea = document.createElement('textarea');
+                textArea.value = logText;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showMessage('✅ Logs copied to clipboard!', 'success');
+                } catch (err2) {
+                    showMessage('❌ Failed to copy logs', 'error');
+                    console.error('Failed to copy logs:', err2);
+                }
+                document.body.removeChild(textArea);
+            }
         }
 
         // API calls
