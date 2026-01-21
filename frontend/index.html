@@ -691,6 +691,7 @@
         let selectedStar = null;
         let selectedStat = null;
         let selectedPowerCard = null;  // For targeting power cards
+        let selectedStealCard = null;  // For steal cards - {handIndex, opponentStarIndex}
         let replacingStarFromHand = null;  // Hand index of star card to play when replacing
         let debugLogs = [];  // Store all logs for export
 
@@ -892,7 +893,34 @@
             const card = player.hand[handIndex];
             log(`Card to play:`, card);
 
-            if (card.type !== 'StarCard' && card.targets_star && targetStarIndex === null) {
+            // Special handling for StealStarCard - two-step targeting
+            if (card.type === 'StealStarCard') {
+                log('StealStarCard detected');
+
+                // Step 1: Select opponent's star to steal
+                if (targetStarIndex === null) {
+                    log('Entering steal mode - select opponent star');
+                    selectedStealCard = { handIndex: handIndex, opponentStarIndex: null };
+                    showMessage(`Select opponent's star to steal (${card.name})`, 'info');
+                    displayGameState();
+                    return;
+                }
+
+                // Step 2: If board is full, select own star to sacrifice
+                const maxStars = currentGameState.max_stars_on_board || 3;
+                if (player.stars.length >= maxStars && replaceStarIndex === null) {
+                    log('Board full, entering sacrifice mode - select own star to sacrifice');
+                    selectedStealCard = { handIndex: handIndex, opponentStarIndex: targetStarIndex };
+                    showMessage(`Your board is full! Select one of your stars to sacrifice.`, 'info');
+                    displayGameState();
+                    return;
+                }
+
+                // Both selections complete - proceed to API call below
+                log(`Steal ready: stealing opponent star ${targetStarIndex}, sacrificing own star ${replaceStarIndex}`);
+            }
+            // Regular power cards (not steal)
+            else if (card.type !== 'StarCard' && card.targets_star && targetStarIndex === null) {
                 // This is a power card - select it for targeting
                 log('Setting up power card targeting');
                 selectedPowerCard = handIndex;
@@ -936,6 +964,7 @@
                 log('Card played!', currentGameState);
                 showMessage('Card played!', 'success');
                 selectedPowerCard = null;  // Clear selection
+                selectedStealCard = null;  // Clear steal selection
                 replacingStarFromHand = null;  // Clear replacement mode
                 displayGameState();
 
@@ -943,13 +972,14 @@
                 log('Error playing card', error);
                 showMessage('Error playing card: ' + error.message, 'error');
                 selectedPowerCard = null;
+                selectedStealCard = null;
                 replacingStarFromHand = null;
             }
         }
 
         // Display functions
         function renderCard(card, options = {}) {
-            const { handIndex = null, starIndex = null, isSelectable = false, isSelected = false } = options;
+            const { handIndex = null, starIndex = null, opponentStarIndex = null, isSelectable = false, isSelected = false } = options;
 
             const div = document.createElement('div');
             let classes = ['card'];
@@ -1006,8 +1036,31 @@
             let buttonHtml = '';
             if (handIndex !== null) {
                 buttonHtml = `<button class="card-button" onclick="playCard(${handIndex})">Play</button>`;
+            } else if (opponentStarIndex !== null) {
+                // Opponent's stars - only selectable when stealing (step 1)
+                if (selectedStealCard !== null && selectedStealCard.opponentStarIndex === null) {
+                    div.onclick = () => {
+                        log(`Opponent star ${opponentStarIndex} selected for stealing`);
+                        playCard(selectedStealCard.handIndex, opponentStarIndex);
+                    };
+                    div.style.cursor = 'pointer';
+                    buttonHtml = `<div class="card-button" style="background: #e74c3c;">⚡ Steal</div>`;
+                }
             } else if (starIndex !== null) {
-                // Star selection for board replacement (HIGHEST PRIORITY - works on ALL stars including exhausted)
+                // Sacrifice mode for steal - select own star to sacrifice (HIGHEST PRIORITY)
+                if (selectedStealCard !== null && selectedStealCard.opponentStarIndex !== null) {
+                    const handIdx = selectedStealCard.handIndex;
+                    const oppIdx = selectedStealCard.opponentStarIndex;
+                    const sacrificeIdx = starIndex;
+
+                    div.onclick = () => {
+                        log(`Sacrificing own star ${sacrificeIdx} to steal opponent star ${oppIdx}`);
+                        playCard(handIdx, oppIdx, sacrificeIdx);
+                    };
+                    div.style.cursor = 'pointer';
+                    buttonHtml = `<div class="card-button" style="background: #e67e22;">💀 Sacrifice</div>`;
+                }
+                // Star selection for board replacement (works on ALL stars including exhausted)
                 if (replacingStarFromHand !== null) {
                     // Log for debugging
                     log(`Setting up replace onclick: replacing hand index ${replacingStarFromHand} with board index ${starIndex}`);
@@ -1128,8 +1181,13 @@
             const opponentStarsDiv = document.getElementById('opponentStars');
             opponentStarsDiv.innerHTML = '';
             if (opponent.stars && opponent.stars.length > 0) {
-                opponent.stars.forEach(card => {
-                    opponentStarsDiv.appendChild(renderCard(card));
+                opponent.stars.forEach((card, index) => {
+                    // Opponent stars are selectable when stealing (step 1: select opponent's star)
+                    const selectableForSteal = selectedStealCard !== null && selectedStealCard.opponentStarIndex === null;
+                    opponentStarsDiv.appendChild(renderCard(card, {
+                        opponentStarIndex: index,
+                        isSelectable: selectableForSteal
+                    }));
                 });
             } else {
                 opponentStarsDiv.innerHTML = '<div class="empty">No stars yet</div>';
@@ -1143,10 +1201,12 @@
                     // Stars are selectable for events only if not exhausted
                     // Power cards can still target exhausted stars
                     // Stars are also selectable when replacing (board full)
+                    // Stars are also selectable when sacrificing for steal (step 2: select own star to sacrifice)
                     const selectableForEvent = hasEvent && !playerHasSelected && !card.exhausted;
                     const selectableForPower = selectedPowerCard !== null;
                     const selectableForReplace = replacingStarFromHand !== null;
-                    const isSelectable = selectableForEvent || selectableForPower || selectableForReplace;
+                    const selectableForSacrifice = selectedStealCard !== null && selectedStealCard.opponentStarIndex !== null;
+                    const isSelectable = selectableForEvent || selectableForPower || selectableForReplace || selectableForSacrifice;
                     const isSelected = selectedStar === index;
                     yourStarsDiv.appendChild(renderCard(card, { starIndex: index, isSelectable, isSelected }));
                 });

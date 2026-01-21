@@ -6,6 +6,7 @@ from engine.models.cards import (
     FanCard,
     PowerCard,            # if you later load power cards
     ModifyStatCard,       # optional
+    StealStarCard,        # steal cards
 )
 
 def _new_id():
@@ -48,6 +49,16 @@ def load_power_cards(sheet):
                         "legacy": int(row.get("Legacy Mod", 0)),
                         }
                     )
+            )
+        elif row.get("Type") == "Steal Star":
+            powers.append(
+                StealStarCard(
+                    id=_new_id(),
+                    name=row.get("Name", "Star Power"),
+                    description=row.get("Description", "Steal an opponent's star with all attachments"),
+                    targets_star=True,
+                    targets_opponent=True
+                )
             )
         else:
             pass  # Skip unsupported power card types for now

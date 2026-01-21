@@ -4,7 +4,7 @@ Simple AI for computer player that makes random decisions
 import random
 import logging
 from typing import Optional, Dict, Any
-from engine.models.cards import StarCard, PowerCard
+from engine.models.cards import StarCard, PowerCard, StealStarCard
 
 logger = logging.getLogger(__name__)
 
@@ -96,15 +96,21 @@ class ComputerPlayer:
             logger.info(f"{player.name} has no power cards to play")
             return False
 
+        # Pick random power card
+        hand_index = random.choice(power_indices)
+        card = player.hand[hand_index]
+
+        # Special handling for StealStarCard
+        if isinstance(card, StealStarCard):
+            return self._play_steal_card(game_engine, player, hand_index)
+
+        # Regular power cards need own stars to target
         if not player.star_cards:
             logger.info(f"{player.name} has no stars to attach power cards to")
             return False
 
-        # Pick random power card and random target star
-        hand_index = random.choice(power_indices)
+        # Pick random target star (own star)
         target_star_index = random.randint(0, len(player.star_cards) - 1)
-
-        card = player.hand[hand_index]
         target = player.star_cards[target_star_index]
 
         logger.info(f"{player.name} (AI) playing power '{card.name}' on '{target.name}'")
@@ -116,6 +122,62 @@ class ComputerPlayer:
                 "player": self.player_index,
                 "hand_index": hand_index,
                 "target_star_index": target_star_index
+            }
+        }
+        game_engine.dispatch(command)
+        return True
+
+    def _play_steal_card(self, game_engine, player, hand_index: int) -> bool:
+        """Try to play a steal card - steal opponent's most valuable star"""
+        from resources.config import GAME_CONFIG
+
+        # Get opponent
+        opponent_index = 1 - self.player_index
+        opponent = game_engine.players[opponent_index]
+
+        # Check if opponent has stars to steal
+        if not opponent.star_cards:
+            logger.info(f"{player.name} (AI) cannot steal - opponent has no stars")
+            return False
+
+        # Pick opponent's most valuable star (fans + power cards)
+        opponent_star_values = []
+        for i, star in enumerate(opponent.star_cards):
+            fan_count = len(star.attached_fans)
+            power_count = len(star.attached_power_cards)
+            value = fan_count * 2 + power_count  # Fans worth more than powers
+            opponent_star_values.append((i, value, star))
+
+        # Sort by value (descending) - steal the most valuable star
+        opponent_star_values.sort(key=lambda x: x[1], reverse=True)
+        target_star_index, target_value, target_star = opponent_star_values[0]
+
+        logger.info(f"{player.name} (AI) targeting opponent's {target_star.name} (value: {target_value})")
+
+        # Check if AI's board is full and needs sacrifice
+        max_stars = GAME_CONFIG["max_stars_on_board"]
+        sacrifice_star_index = None
+
+        if len(player.star_cards) >= max_stars:
+            # Board is full - pick the star with fewest fans to sacrifice
+            star_fan_counts = [(i, len(star.attached_fans)) for i, star in enumerate(player.star_cards)]
+            star_fan_counts.sort(key=lambda x: x[1])
+            sacrifice_star_index = star_fan_counts[0][0]
+            sacrificed_star = player.star_cards[sacrifice_star_index]
+            sacrificed_fan_count = len(sacrificed_star.attached_fans)
+            logger.info(f"{player.name} (AI) will sacrifice {sacrificed_star.name} ({sacrificed_fan_count} fans)")
+
+        card = player.hand[hand_index]
+        logger.info(f"{player.name} (AI) playing '{card.name}' to steal {target_star.name}")
+
+        # Use the dispatch system to play the steal card
+        command = {
+            "type": "PLAY_CARD",
+            "payload": {
+                "player": self.player_index,
+                "hand_index": hand_index,
+                "target_star_index": target_star_index,  # Opponent's star to steal
+                "replace_star_index": sacrifice_star_index  # Own star to sacrifice if needed
             }
         }
         game_engine.dispatch(command)

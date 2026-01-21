@@ -104,3 +104,10 @@ class ModifyStatCard(PowerCard):
 @dataclass
 class LocationPowerCard(PowerCard):
     pass
+
+
+@dataclass
+class StealStarCard(PowerCard):
+    """Power card that steals an opponent's star with all attachments"""
+    targets_star: bool = True  # Targets opponent's star
+    targets_opponent: bool = True  # Flag to indicate this targets opponent's board

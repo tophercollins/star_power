@@ -67,7 +67,7 @@ class GameEngine:
                 logger.info(f"Card to play: {card.name} (type: {type(card).__name__})")
 
                 # Check turn limits based on card type
-                from engine.models.cards import StarCard, PowerCard
+                from engine.models.cards import StarCard, PowerCard, StealStarCard
                 if isinstance(card, StarCard):
                     logger.info(f"Star card detected, stars played this turn: {self.stars_played_this_turn[player_index]}")
                     if self.stars_played_this_turn[player_index] >= 1:
@@ -91,17 +91,60 @@ class GameEngine:
                         logger.warning(f"Player {player.name} already played a power card this turn")
                         return self.snapshot()
 
-                # Delegate to common_ops which handles all card types
-                logger.info(f"Calling play_card_from_hand with replace_star_index={replace_star_index}")
-                play_card_from_hand(player, hand_index, target_star_index=target_star_index,
-                                  replace_star_index=replace_star_index, discard_pile=self.discard_pile)
-                logger.info(f"play_card_from_hand completed. Player hand size: {len(player.hand)}, board size: {len(player.star_cards)}")
+                # Special handling for StealStarCard - requires both players
+                if isinstance(card, StealStarCard):
+                    logger.info("StealStarCard detected - handling steal logic")
 
-                # Track the play
-                if isinstance(card, StarCard):
-                    self.stars_played_this_turn[player_index] += 1
-                elif isinstance(card, PowerCard):
+                    # Get opponent
+                    opponent_index = 1 - player_index
+                    opponent = self.players[opponent_index]
+
+                    # Validate opponent has stars
+                    if len(opponent.star_cards) == 0:
+                        logger.warning(f"Cannot steal - opponent has no stars")
+                        return self.snapshot()
+
+                    # Validate target_star_index (opponent's star to steal)
+                    if target_star_index is None or target_star_index < 0 or target_star_index >= len(opponent.star_cards):
+                        logger.warning(f"Invalid target_star_index for steal: {target_star_index}")
+                        return self.snapshot()
+
+                    # Check if stealer's board is full and needs sacrifice
+                    max_stars = GAME_CONFIG["max_stars_on_board"]
+                    if len(player.star_cards) >= max_stars:
+                        if replace_star_index is None:
+                            logger.warning(f"Board full ({max_stars} stars) - must specify replace_star_index for sacrifice")
+                            return self.snapshot()
+                        if replace_star_index < 0 or replace_star_index >= len(player.star_cards):
+                            logger.warning(f"Invalid replace_star_index for sacrifice: {replace_star_index}")
+                            return self.snapshot()
+
+                    # Perform the steal
+                    from engine.rules.power_ops import steal_star_from_opponent
+                    steal_star_from_opponent(
+                        stealing_player=player,
+                        victim_player=opponent,
+                        hand_index=hand_index,
+                        opponent_star_index=target_star_index,
+                        sacrifice_star_index=replace_star_index,
+                        discard_pile=self.discard_pile
+                    )
+
+                    # Track power play
                     self.powers_played_this_turn[player_index] += 1
+
+                # Otherwise, delegate to common_ops which handles all card types
+                else:
+                    logger.info(f"Calling play_card_from_hand with replace_star_index={replace_star_index}")
+                    play_card_from_hand(player, hand_index, target_star_index=target_star_index,
+                                      replace_star_index=replace_star_index, discard_pile=self.discard_pile)
+                    logger.info(f"play_card_from_hand completed. Player hand size: {len(player.hand)}, board size: {len(player.star_cards)}")
+
+                    # Track the play (only for non-steal cards - steal tracking happens above)
+                    if isinstance(card, StarCard):
+                        self.stars_played_this_turn[player_index] += 1
+                    elif isinstance(card, PowerCard):
+                        self.powers_played_this_turn[player_index] += 1
             else:
                 logger.warning(f"Invalid player index: {player_index}")
 
