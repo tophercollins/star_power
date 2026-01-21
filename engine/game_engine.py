@@ -15,21 +15,22 @@ class GameEngine:
     def __init__(self, players: List[Any], decks: Tuple[Any, Any, Any]):
         logger.info("Initializing GameEngine")
         self.players = players
-        self.main_deck, self.event_deck, self.fan_deck = decks
+        self.main_deck, self.event_deck, self.fan_deck = decks  # event_deck kept for backwards compat but unused
         self.discard_pile: List[Any] = []  # Cards discarded from play
-        self.turn = 1
-        self.phase = "play"  # "play", "event_select", "event_resolve", "game_over"
+        self.round = 1  # Tracks rounds (1 round = both players have taken a turn)
+        self.current_player_index = 0  # Always 0 (player 1) or 1 (computer), alternates each turn within round
+        self.phase = "play"  # "play", "game_over"
 
-        # Event state
+        # Event state (player-controlled, not automatic)
         self.current_event: Optional[Any] = None
+        self.event_owner: Optional[int] = None  # Which player played the event
+        self.event_played_on_round: Optional[int] = None  # Which round the event was played
         self.player_selections: Dict[int, Dict[str, Any]] = {}  # {player_index: {star, stat}}
 
-        # Turn-based play tracking
+        # Turn-based play tracking (resets each individual turn, not round)
         self.stars_played_this_turn: Dict[int, int] = {0: 0, 1: 0}  # {player_index: count}
         self.powers_played_this_turn: Dict[int, int] = {0: 0, 1: 0}  # {player_index: count}
-
-        # Turn order rotation - tracks which player goes first each turn
-        self.first_player_index: int = 0  # Alternates each turn
+        self.events_played_this_turn: Dict[int, int] = {0: 0, 1: 0}  # {player_index: count}
 
         # Legacy pending card (for power cards)
         self.pending_card: Optional[Dict[str, Any]] = None
@@ -67,8 +68,61 @@ class GameEngine:
                 logger.info(f"Card to play: {card.name} (type: {type(card).__name__})")
 
                 # Check turn limits based on card type
-                from engine.models.cards import StarCard, PowerCard, StealStarCard
-                if isinstance(card, StarCard):
+                from engine.models.cards import StarCard, PowerCard, StealStarCard, EventCard
+                if isinstance(card, EventCard):
+                    # Event card detected - handle event playing
+                    logger.info(f"EventCard detected: {card.name}")
+
+                    # Check event play limit
+                    if self.events_played_this_turn[player_index] >= 1:
+                        logger.warning(f"Player {player.name} already played an event this turn")
+                        return self.snapshot()
+
+                    # Check if there's already an active event
+                    if self.current_event is not None:
+                        logger.warning(f"Cannot play event - {self.current_event.name} is already active")
+                        return self.snapshot()
+
+                    # Check if player has stars to compete with
+                    if len(player.star_cards) == 0:
+                        logger.warning(f"Cannot play event - {player.name} has no stars")
+                        return self.snapshot()
+
+                    # Require immediate star selection (target_star_index)
+                    if target_star_index is None or target_star_index < 0 or target_star_index >= len(player.star_cards):
+                        logger.warning(f"Must select a star to compete in event")
+                        return self.snapshot()
+
+                    selected_star = player.star_cards[target_star_index]
+
+                    # Check if star is exhausted
+                    if selected_star.exhausted:
+                        logger.warning(f"Cannot use exhausted star {selected_star.name} for event")
+                        return self.snapshot()
+
+                    # Set up event state
+                    self.current_event = card
+                    self.event_owner = player_index
+                    self.event_played_on_round = self.round
+
+                    # Auto-select stat for event owner based on event type
+                    chosen_stat = self._get_stat_for_event(card, selected_star)
+
+                    # Store owner's selection
+                    self.player_selections[player_index] = {
+                        "star": selected_star,
+                        "stat": chosen_stat
+                    }
+
+                    # Remove event card from hand
+                    player.hand.pop(hand_index)
+
+                    # Track event play
+                    self.events_played_this_turn[player_index] += 1
+
+                    logger.info(f"{player.name} played event '{card.name}' with star '{selected_star.name}' using stat '{chosen_stat}'")
+
+                elif isinstance(card, StarCard):
                     logger.info(f"Star card detected, stars played this turn: {self.stars_played_this_turn[player_index]}")
                     if self.stars_played_this_turn[player_index] >= 1:
                         logger.warning(f"Player {player.name} already played a star this turn")

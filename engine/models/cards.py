@@ -35,6 +35,16 @@ class StatContestEvent(EventCard):
 
 
 @dataclass
+class DoubleStatEvent(EventCard):
+    """Event where two stats are summed together"""
+    stat1: str = "aura"  # First stat to sum
+    stat2: str = "talent"  # Second stat to sum
+    contest_type: str = "highest"  # "highest" sum wins
+    event_type: str = "double_stat"
+    stat_options: List[str] = field(default_factory=list)  # Empty - both stats always used
+
+
+@dataclass
 class CombinedStatEvent(EventCard):
     """Event where multiple stats are summed together"""
     required_stats: List[str] = field(default_factory=list)  # Stats to sum
