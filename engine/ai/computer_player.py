@@ -38,6 +38,8 @@ class ComputerPlayer:
 
     def _play_random_star(self, game_engine, player) -> bool:
         """Try to play a random star card from hand"""
+        from resources.config import GAME_CONFIG
+
         star_indices = [
             i for i, card in enumerate(player.hand)
             if isinstance(card, StarCard)
@@ -51,14 +53,24 @@ class ComputerPlayer:
         hand_index = random.choice(star_indices)
         card = player.hand[hand_index]
 
-        logger.info(f"{player.name} (AI) playing star: {card.name}")
+        # Check if board is full and needs replacement
+        max_stars = GAME_CONFIG["max_stars_on_board"]
+        replace_star_index = None
+        if len(player.star_cards) >= max_stars:
+            # Board is full - pick a random star to replace
+            replace_star_index = random.randint(0, len(player.star_cards) - 1)
+            replaced_star = player.star_cards[replace_star_index]
+            logger.info(f"{player.name} (AI) replacing star: {replaced_star.name} with {card.name}")
+        else:
+            logger.info(f"{player.name} (AI) playing star: {card.name}")
 
         # Use the dispatch system to play the card
         command = {
             "type": "PLAY_CARD",
             "payload": {
                 "player": self.player_index,
-                "hand_index": hand_index
+                "hand_index": hand_index,
+                "replace_star_index": replace_star_index
             }
         }
         game_engine.dispatch(command)

@@ -208,7 +208,7 @@
             border: 3px solid rgba(255,255,255,0.5);
             border-radius: 10px;
             padding: 15px;
-            width: 180px;
+            width: 160px;  /* Reduced from 180px to fit 7 cards in hand better */
             height: auto;  /* Ensure card expands to fit content */
             min-height: 220px;  /* Minimum height for consistency */
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
@@ -664,7 +664,7 @@
 
             <!-- Your Board -->
             <div class="board">
-                <h2>👤 <span id="playerNameDisplay">You</span>'s Stars</h2>
+                <h2>👤 <span id="playerNameDisplay">You</span>'s Stars <span style="font-size: 14px; opacity: 0.7;">(<span id="yourStarCount">0</span>/3)</span></h2>
                 <div id="yourStars" class="cards">
                     <div class="empty">No stars yet</div>
                 </div>
@@ -672,7 +672,7 @@
 
             <!-- Your Hand -->
             <div class="board">
-                <h2>🃏 Your Hand</h2>
+                <h2>🃏 Your Hand <span style="font-size: 14px; opacity: 0.7;">(<span id="yourHandCount">0</span>/7)</span></h2>
                 <div id="yourHand" class="cards">
                     <div class="empty">No cards</div>
                 </div>
@@ -1098,6 +1098,10 @@
             } else {
                 yourHandDiv.innerHTML = '<div class="empty">No cards</div>';
             }
+
+            // Update counts
+            document.getElementById('yourStarCount').textContent = player.stars?.length || 0;
+            document.getElementById('yourHandCount').textContent = player.hand?.length || 0;
         }
 
         function displayEvent() {
