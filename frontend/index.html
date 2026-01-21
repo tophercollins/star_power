@@ -953,10 +953,12 @@
             } else if (starIndex !== null) {
                 // Star selection for board replacement (HIGHEST PRIORITY - works on ALL stars including exhausted)
                 if (replacingStarFromHand !== null) {
+                    // Use div.onclick for replacement (clicking anywhere on card works)
                     div.onclick = () => {
                         playCard(replacingStarFromHand, null, starIndex);
                     };
-                    buttonHtml = `<button class="card-button" style="background: #e74c3c;" onclick="event.stopPropagation(); playCard(${replacingStarFromHand}, null, ${starIndex})">Replace</button>`;
+                    div.style.cursor = 'pointer';
+                    buttonHtml = `<button class="card-button" style="background: #e74c3c; pointer-events: none;">Replace</button>`;
                 }
                 // Check if star is exhausted and there's an event (show exhaustion message)
                 // BUT only if NOT in replacement mode
