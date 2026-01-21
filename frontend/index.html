@@ -951,26 +951,27 @@
             if (handIndex !== null) {
                 buttonHtml = `<button class="card-button" onclick="playCard(${handIndex})">Play</button>`;
             } else if (starIndex !== null) {
+                // Star selection for board replacement (HIGHEST PRIORITY - works on ALL stars including exhausted)
+                if (replacingStarFromHand !== null) {
+                    div.onclick = () => {
+                        playCard(replacingStarFromHand, null, starIndex);
+                    };
+                    buttonHtml = `<button class="card-button" style="background: #e74c3c;" onclick="event.stopPropagation(); playCard(${replacingStarFromHand}, null, ${starIndex})">Replace</button>`;
+                }
                 // Check if star is exhausted and there's an event (show exhaustion message)
-                if (card.exhausted && selectedStat) {
+                // BUT only if NOT in replacement mode
+                else if (card.exhausted && selectedStat) {
                     buttonHtml = `<div style="background: rgba(0,0,0,0.7); color: #ccc; padding: 8px; border-radius: 5px; text-align: center; font-size: 11px; margin-top: 5px;">😴 EXHAUSTED</div>`;
                 }
-                // Star is selectable
+                // Star is selectable for other actions
                 else if (isSelectable) {
-                    // Star selection for board replacement (HIGHEST PRIORITY)
-                    if (replacingStarFromHand !== null) {
-                        div.onclick = () => {
-                            playCard(replacingStarFromHand, null, starIndex);
-                        };
-                        buttonHtml = `<button class="card-button" style="background: #e74c3c;" onclick="event.stopPropagation(); playCard(${replacingStarFromHand}, null, ${starIndex})">Replace</button>`;
-                    }
-                    // Star selection for power card targeting (PRIORITY)
-                    else if (selectedPowerCard !== null && !card.exhausted) {
+                    // Star selection for power card targeting
+                    if (selectedPowerCard !== null && !card.exhausted) {
                         div.onclick = () => {
                             playCard(selectedPowerCard, starIndex);
                         };
                     }
-                    // Star selection for events (FALLBACK if no power card selected)
+                    // Star selection for events
                     else if (selectedStat && !card.exhausted) {
                         div.onclick = () => {
                             selectedStar = starIndex;
