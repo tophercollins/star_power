@@ -57,10 +57,19 @@ class ComputerPlayer:
         max_stars = GAME_CONFIG["max_stars_on_board"]
         replace_star_index = None
         if len(player.star_cards) >= max_stars:
-            # Board is full - pick a random star to replace
-            replace_star_index = random.randint(0, len(player.star_cards) - 1)
+            # Board is full - pick the star with fewest fans to replace
+            # This prevents losing valuable fans
+            star_fan_counts = [(i, len(star.attached_fans)) for i, star in enumerate(player.star_cards)]
+
+            # Sort by fan count (ascending) - stars with 0 fans first
+            star_fan_counts.sort(key=lambda x: x[1])
+
+            # Pick the star with the fewest fans (first in sorted list)
+            replace_star_index = star_fan_counts[0][0]
             replaced_star = player.star_cards[replace_star_index]
-            logger.info(f"{player.name} (AI) replacing star: {replaced_star.name} with {card.name}")
+            fan_count = len(replaced_star.attached_fans)
+
+            logger.info(f"{player.name} (AI) replacing star: {replaced_star.name} ({fan_count} fans) with {card.name}")
         else:
             logger.info(f"{player.name} (AI) playing star: {card.name}")
 
