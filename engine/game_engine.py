@@ -52,8 +52,11 @@ class GameEngine:
             target_star_index = payload.get("target_star_index")  # For power cards
             replace_star_index = payload.get("replace_star_index")  # For replacing stars when board is full
 
+            logger.info(f"PLAY_CARD dispatch: player_index={player_index}, hand_index={hand_index}, target_star_index={target_star_index}, replace_star_index={replace_star_index}")
+
             if 0 <= player_index < len(self.players):
                 player = self.players[player_index]
+                logger.info(f"Player: {player.name}, hand size: {len(player.hand)}, board size: {len(player.star_cards)}")
 
                 # Validate hand_index and get the card
                 if hand_index is None or hand_index < 0 or hand_index >= len(player.hand):
@@ -61,16 +64,19 @@ class GameEngine:
                     return self.snapshot()
 
                 card = player.hand[hand_index]
+                logger.info(f"Card to play: {card.name} (type: {type(card).__name__})")
 
                 # Check turn limits based on card type
                 from engine.models.cards import StarCard, PowerCard
                 if isinstance(card, StarCard):
+                    logger.info(f"Star card detected, stars played this turn: {self.stars_played_this_turn[player_index]}")
                     if self.stars_played_this_turn[player_index] >= 1:
                         logger.warning(f"Player {player.name} already played a star this turn")
                         return self.snapshot()
 
                     # Check board limit
                     max_stars = GAME_CONFIG["max_stars_on_board"]
+                    logger.info(f"Board limit check: current={len(player.star_cards)}, max={max_stars}, replace_star_index={replace_star_index}")
                     if len(player.star_cards) >= max_stars:
                         if replace_star_index is None:
                             logger.warning(f"Board full ({max_stars} stars) - must specify replace_star_index")
@@ -78,6 +84,7 @@ class GameEngine:
                         if replace_star_index < 0 or replace_star_index >= len(player.star_cards):
                             logger.warning(f"Invalid replace_star_index: {replace_star_index}")
                             return self.snapshot()
+                        logger.info(f"Board full, will replace star at index {replace_star_index}")
 
                 elif isinstance(card, PowerCard):
                     if self.powers_played_this_turn[player_index] >= 1:
@@ -85,8 +92,10 @@ class GameEngine:
                         return self.snapshot()
 
                 # Delegate to common_ops which handles all card types
+                logger.info(f"Calling play_card_from_hand with replace_star_index={replace_star_index}")
                 play_card_from_hand(player, hand_index, target_star_index=target_star_index,
                                   replace_star_index=replace_star_index, discard_pile=self.discard_pile)
+                logger.info(f"play_card_from_hand completed. Player hand size: {len(player.hand)}, board size: {len(player.star_cards)}")
 
                 # Track the play
                 if isinstance(card, StarCard):

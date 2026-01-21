@@ -100,7 +100,7 @@ class GameService:
         engine = self.active_games[game_id]
         return engine.snapshot()
 
-    def play_card(self, game_id: str, player_index: int, hand_index: int, target_star_index: int = None) -> Optional[Dict[str, Any]]:
+    def play_card(self, game_id: str, player_index: int, hand_index: int, target_star_index: int = None, replace_star_index: int = None) -> Optional[Dict[str, Any]]:
         """
         Play a card from a player's hand.
 
@@ -109,6 +109,7 @@ class GameService:
             player_index: Which player (0 or 1)
             hand_index: Position of card in hand
             target_star_index: Index of star to target (for power cards)
+            replace_star_index: Index of star on board to replace (when board is full)
 
         Returns:
             Updated game state or None if game not found
@@ -125,11 +126,12 @@ class GameService:
             "payload": {
                 "player": player_index,
                 "hand_index": hand_index,
-                "target_star_index": target_star_index
+                "target_star_index": target_star_index,
+                "replace_star_index": replace_star_index
             }
         }
 
-        logger.info(f"Game {game_id}: Player {player_index} playing card at index {hand_index}, target={target_star_index}")
+        logger.info(f"Game {game_id}: Player {player_index} playing card at index {hand_index}, target={target_star_index}, replace={replace_star_index}")
 
         # Dispatch to engine
         try:

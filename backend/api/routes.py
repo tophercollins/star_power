@@ -42,13 +42,15 @@ class PlayCardRequest(BaseModel):
     player_index: int = Field(..., ge=0, le=1, description="Player index (0 or 1)")
     hand_index: int = Field(..., ge=0, description="Index of card in player's hand")
     target_star_index: Optional[int] = Field(None, ge=0, description="Index of star to target (for power cards)")
+    replace_star_index: Optional[int] = Field(None, ge=0, description="Index of star on board to replace (when board is full)")
 
     class Config:
         schema_extra = {
             "example": {
                 "player_index": 0,
                 "hand_index": 2,
-                "target_star_index": 0
+                "target_star_index": 0,
+                "replace_star_index": None
             }
         }
 
@@ -172,13 +174,14 @@ def play_card(game_id: str, request: PlayCardRequest):
     - Updated game state after the card is played
     """
     try:
-        logger.info(f"Playing card in game {game_id}: player={request.player_index}, card={request.hand_index}, target={request.target_star_index}")
+        logger.info(f"Playing card in game {game_id}: player={request.player_index}, card={request.hand_index}, target={request.target_star_index}, replace={request.replace_star_index}")
 
         state = game_service.play_card(
             game_id=game_id,
             player_index=request.player_index,
             hand_index=request.hand_index,
-            target_star_index=request.target_star_index
+            target_star_index=request.target_star_index,
+            replace_star_index=request.replace_star_index
         )
 
         if state is None:

@@ -883,18 +883,18 @@
         }
 
         async function playCard(handIndex, targetStarIndex = null, replaceStarIndex = null) {
-            console.log(`playCard called: handIndex=${handIndex}, targetStarIndex=${targetStarIndex}, replaceStarIndex=${replaceStarIndex}`);
+            log(`playCard called: handIndex=${handIndex}, targetStarIndex=${targetStarIndex}, replaceStarIndex=${replaceStarIndex}`);
 
             if (!currentGameId) return;
 
             // Check if this is a power card that needs targeting
             const player = currentGameState.players[0];
             const card = player.hand[handIndex];
-            console.log(`Card to play:`, card);
+            log(`Card to play:`, card);
 
             if (card.type !== 'StarCard' && card.targets_star && targetStarIndex === null) {
                 // This is a power card - select it for targeting
-                console.log('Setting up power card targeting');
+                log('Setting up power card targeting');
                 selectedPowerCard = handIndex;
                 showMessage(`Select a star to apply "${card.name}"`, 'info');
                 displayGameState();
@@ -903,18 +903,18 @@
 
             // Check if this is a star card and board is full
             const maxStars = currentGameState.max_stars_on_board || 3;
-            console.log(`Checking board: type=${card.type}, stars on board=${player.stars.length}, maxStars=${maxStars}, replaceStarIndex=${replaceStarIndex}`);
+            log(`Checking board: type=${card.type}, stars on board=${player.stars.length}, maxStars=${maxStars}, replaceStarIndex=${replaceStarIndex}`);
 
             if (card.type === 'StarCard' && player.stars.length >= maxStars && replaceStarIndex === null) {
                 // Board is full - need to select a star to replace
-                console.log('Board is full, entering replacement mode');
+                log('Board is full, entering replacement mode');
                 replacingStarFromHand = handIndex;
                 showMessage(`Board is full (${maxStars} stars). Select a star to replace.`, 'info');
                 displayGameState();
                 return;
             }
 
-            console.log('Proceeding to API call');
+            log('Proceeding to API call');
             try {
                 log(`Playing card at index ${handIndex}, target=${targetStarIndex}, replace=${replaceStarIndex}...`);
                 const response = await fetch(`${API_URL}/api/game/${currentGameId}/play_card`, {
@@ -1010,18 +1010,18 @@
                 // Star selection for board replacement (HIGHEST PRIORITY - works on ALL stars including exhausted)
                 if (replacingStarFromHand !== null) {
                     // Log for debugging
-                    console.log(`Setting up replace onclick: replacing hand index ${replacingStarFromHand} with board index ${starIndex}`);
+                    log(`Setting up replace onclick: replacing hand index ${replacingStarFromHand} with board index ${starIndex}`);
 
                     // Capture values in closure to avoid reference issues
                     const handIdx = replacingStarFromHand;
                     const boardIdx = starIndex;
 
                     div.onclick = () => {
-                        console.log(`Replace clicked: handIdx=${handIdx}, boardIdx=${boardIdx}`);
+                        log(`Replace clicked via div.onclick: handIdx=${handIdx}, boardIdx=${boardIdx}`);
                         playCard(handIdx, null, boardIdx);
                     };
                     div.style.cursor = 'pointer';
-                    buttonHtml = `<div class="card-button" style="background: #e74c3c; pointer-events: auto; cursor: pointer;" onclick="console.log('Button clicked: replacing ${replacingStarFromHand} with ${starIndex}'); playCard(${replacingStarFromHand}, null, ${starIndex}); event.stopPropagation();">Replace</div>`;
+                    buttonHtml = `<div class="card-button" style="background: #e74c3c; pointer-events: auto; cursor: pointer;" onclick="log('Button clicked via button onclick: replacing ${replacingStarFromHand} with ${starIndex}'); playCard(${replacingStarFromHand}, null, ${starIndex}); event.stopPropagation();">Replace</div>`;
                 }
                 // Check if star is exhausted and there's an event (show exhaustion message)
                 // BUT only if NOT in replacement mode
