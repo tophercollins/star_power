@@ -287,10 +287,7 @@ class GameEngine:
                     "stat": stat
                 }
                 logger.info(f"Computer selected {star.name} with stat {stat}")
-
-                # Auto-resolve if both players have selected (won't happen yet since player hasn't selected)
-                if len(self.player_selections) == 2:
-                    self._resolve_current_event()
+                # Note: Event will be resolved in _handle_end_turn(), not here
 
     def snapshot(self) -> Dict[str, Any]:
         return {
