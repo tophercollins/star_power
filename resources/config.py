@@ -4,8 +4,10 @@ GAME_CONFIG = {
     "cards_drawn_per_turn": 1,
     "star_cards_per_turn_limit": 1,
     "power_cards_per_turn_limit": 2,
-    "event_start_turn": 2,    
+    "event_start_turn": 2,
     "fans_to_win": 5,
+    "max_stars_on_board": 3,  # Maximum stars each player can have on board
+    "max_hand_size": 7,  # Maximum cards in hand
     "main_deck_composition": {
         "star_cards": 20,  # Total number of StarCards to include in the main deck
         "power_cards": 2   # Number of each power card type to include in the main deck

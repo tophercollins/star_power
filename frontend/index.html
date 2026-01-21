@@ -690,6 +690,7 @@
         let selectedStar = null;
         let selectedStat = null;
         let selectedPowerCard = null;  // For targeting power cards
+        let replacingStarFromHand = null;  // Hand index of star card to play when replacing
 
         // Utility functions
         function showMessage(message, type = 'success') {
@@ -833,7 +834,7 @@
             }
         }
 
-        async function playCard(handIndex, targetStarIndex = null) {
+        async function playCard(handIndex, targetStarIndex = null, replaceStarIndex = null) {
             if (!currentGameId) return;
 
             // Check if this is a power card that needs targeting
@@ -848,15 +849,26 @@
                 return;
             }
 
+            // Check if this is a star card and board is full
+            const maxStars = currentGameState.max_stars_on_board || 3;
+            if (card.type === 'StarCard' && player.stars.length >= maxStars && replaceStarIndex === null) {
+                // Board is full - need to select a star to replace
+                replacingStarFromHand = handIndex;
+                showMessage(`Board is full (${maxStars} stars). Select a star to replace.`, 'info');
+                displayGameState();
+                return;
+            }
+
             try {
-                log(`Playing card at index ${handIndex}, target=${targetStarIndex}...`);
+                log(`Playing card at index ${handIndex}, target=${targetStarIndex}, replace=${replaceStarIndex}...`);
                 const response = await fetch(`${API_URL}/api/game/${currentGameId}/play_card`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         player_index: 0,
                         hand_index: handIndex,
-                        target_star_index: targetStarIndex
+                        target_star_index: targetStarIndex,
+                        replace_star_index: replaceStarIndex
                     })
                 });
 
@@ -868,12 +880,14 @@
                 log('Card played!', currentGameState);
                 showMessage('Card played!', 'success');
                 selectedPowerCard = null;  // Clear selection
+                replacingStarFromHand = null;  // Clear replacement mode
                 displayGameState();
 
             } catch (error) {
                 log('Error playing card', error);
                 showMessage('Error playing card: ' + error.message, 'error');
                 selectedPowerCard = null;
+                replacingStarFromHand = null;
             }
         }
 
@@ -941,16 +955,23 @@
                 if (card.exhausted && selectedStat) {
                     buttonHtml = `<div style="background: rgba(0,0,0,0.7); color: #ccc; padding: 8px; border-radius: 5px; text-align: center; font-size: 11px; margin-top: 5px;">😴 EXHAUSTED</div>`;
                 }
-                // Star is selectable (not exhausted or selecting for power card)
-                else if (isSelectable && !card.exhausted) {
+                // Star is selectable
+                else if (isSelectable) {
+                    // Star selection for board replacement (HIGHEST PRIORITY)
+                    if (replacingStarFromHand !== null) {
+                        div.onclick = () => {
+                            playCard(replacingStarFromHand, null, starIndex);
+                        };
+                        buttonHtml = `<button class="card-button" style="background: #e74c3c;" onclick="event.stopPropagation(); playCard(${replacingStarFromHand}, null, ${starIndex})">Replace</button>`;
+                    }
                     // Star selection for power card targeting (PRIORITY)
-                    if (selectedPowerCard !== null) {
+                    else if (selectedPowerCard !== null && !card.exhausted) {
                         div.onclick = () => {
                             playCard(selectedPowerCard, starIndex);
                         };
                     }
                     // Star selection for events (FALLBACK if no power card selected)
-                    else if (selectedStat) {
+                    else if (selectedStat && !card.exhausted) {
                         div.onclick = () => {
                             selectedStar = starIndex;
                             selectStarForEvent(starIndex, selectedStat);
@@ -1055,9 +1076,11 @@
                 player.stars.forEach((card, index) => {
                     // Stars are selectable for events only if not exhausted
                     // Power cards can still target exhausted stars
+                    // Stars are also selectable when replacing (board full)
                     const selectableForEvent = hasEvent && !playerHasSelected && !card.exhausted;
                     const selectableForPower = selectedPowerCard !== null;
-                    const isSelectable = selectableForEvent || selectableForPower;
+                    const selectableForReplace = replacingStarFromHand !== null;
+                    const isSelectable = selectableForEvent || selectableForPower || selectableForReplace;
                     const isSelected = selectedStar === index;
                     yourStarsDiv.appendChild(renderCard(card, { starIndex: index, isSelectable, isSelected }));
                 });

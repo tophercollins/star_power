@@ -16,6 +16,7 @@ class GameEngine:
         logger.info("Initializing GameEngine")
         self.players = players
         self.main_deck, self.event_deck, self.fan_deck = decks
+        self.discard_pile: List[Any] = []  # Cards discarded from play
         self.turn = 1
         self.phase = "play"  # "play", "event_select", "event_resolve", "game_over"
 
@@ -49,6 +50,7 @@ class GameEngine:
             player_index = payload.get("player", 0)
             hand_index = payload.get("hand_index")
             target_star_index = payload.get("target_star_index")  # For power cards
+            replace_star_index = payload.get("replace_star_index")  # For replacing stars when board is full
 
             if 0 <= player_index < len(self.players):
                 player = self.players[player_index]
@@ -66,13 +68,25 @@ class GameEngine:
                     if self.stars_played_this_turn[player_index] >= 1:
                         logger.warning(f"Player {player.name} already played a star this turn")
                         return self.snapshot()
+
+                    # Check board limit
+                    max_stars = GAME_CONFIG["max_stars_on_board"]
+                    if len(player.star_cards) >= max_stars:
+                        if replace_star_index is None:
+                            logger.warning(f"Board full ({max_stars} stars) - must specify replace_star_index")
+                            return self.snapshot()
+                        if replace_star_index < 0 or replace_star_index >= len(player.star_cards):
+                            logger.warning(f"Invalid replace_star_index: {replace_star_index}")
+                            return self.snapshot()
+
                 elif isinstance(card, PowerCard):
                     if self.powers_played_this_turn[player_index] >= 1:
                         logger.warning(f"Player {player.name} already played a power card this turn")
                         return self.snapshot()
 
                 # Delegate to common_ops which handles all card types
-                play_card_from_hand(player, hand_index, target_star_index=target_star_index)
+                play_card_from_hand(player, hand_index, target_star_index=target_star_index,
+                                  replace_star_index=replace_star_index, discard_pile=self.discard_pile)
 
                 # Track the play
                 if isinstance(card, StarCard):
@@ -240,8 +254,13 @@ class GameEngine:
 
         This happens AFTER event resolution, preparing for the next turn.
         """
-        # Draw cards for both players
+        # Draw cards for both players (respecting hand limit)
+        max_hand_size = GAME_CONFIG["max_hand_size"]
         for i, player in enumerate(self.players):
+            if len(player.hand) >= max_hand_size:
+                logger.info(f"{player.name} hand is full ({max_hand_size} cards) - cannot draw")
+                continue
+
             card = draw_card(self.main_deck)
             if card:
                 player.hand.append(card)
@@ -307,10 +326,13 @@ class GameEngine:
                 "player1": count_player_fans(self.players[0]),
                 "player2": count_player_fans(self.players[1])
             },
+            "discard_pile_size": len(self.discard_pile),
             "game_over": self.phase == "game_over",
             "winner": self.winner,
             "game_over_reason": self.game_over_reason,
-            "fans_to_win": GAME_CONFIG["fans_to_win"]
+            "fans_to_win": GAME_CONFIG["fans_to_win"],
+            "max_stars_on_board": GAME_CONFIG["max_stars_on_board"],
+            "max_hand_size": GAME_CONFIG["max_hand_size"]
         }
 
     

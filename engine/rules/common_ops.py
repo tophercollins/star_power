@@ -5,7 +5,8 @@ from engine.rules.power_ops import play_power_from_hand
 
 logger = logging.getLogger(__name__)
 
-def play_card_from_hand(player, hand_index: int, target_star_index: int = None):
+def play_card_from_hand(player, hand_index: int, target_star_index: int = None,
+                        replace_star_index: int = None, discard_pile: list = None):
     """
     Play a card from player's hand.
 
@@ -13,6 +14,8 @@ def play_card_from_hand(player, hand_index: int, target_star_index: int = None):
         player: The player object
         hand_index: Index of card in hand
         target_star_index: Index of star to target (for power cards)
+        replace_star_index: Index of star to replace (when board is full)
+        discard_pile: Discard pile to add replaced stars to
 
     Returns:
         None (mutates player state)
@@ -28,7 +31,8 @@ def play_card_from_hand(player, hand_index: int, target_star_index: int = None):
     card = player.hand[hand_index]
 
     if isinstance(card, StarCard):
-        return play_star_from_hand(player, hand_index)
+        return play_star_from_hand(player, hand_index, replace_star_index=replace_star_index,
+                                   discard_pile=discard_pile)
 
     elif isinstance(card, PowerCard):
         return play_power_from_hand(player, hand_index, target_star_index=target_star_index)
