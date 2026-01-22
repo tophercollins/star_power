@@ -1,5 +1,5 @@
 from typing import Any, Dict
-from engine.models.cards import StarCard, PowerCard, ModifyStatCard
+from engine.models.cards import StarCard, PowerCard, ModifyStatCard, EventCard, StatContestEvent, DoubleStatEvent
 
 def star_card_view(card) -> dict:
     return {
@@ -62,9 +62,22 @@ def player_view(player: Any, player_index: int = 0) -> Dict[str, Any]:
             else:
                 v["show_button"] = False
 
+        elif isinstance(c, EventCard):
+            v = event_view(c)
+            # Human can play events if they have stars on board (need a star to compete with)
+            if player_index == 0 and has_star_cards:
+                v["show_button"] = True
+                v["button_label"] = "Play Event"
+                v["button_command"] = {
+                    "type": "PLAY_CARD",
+                    "payload": {"player": player_index, "hand_index": i}
+                }
+            else:
+                v["show_button"] = False
+
         else:
             # Fallback for unknown types
-            v = {"id": getattr(card, "id", None), "type": c.__class__.__name__, "name": getattr(c, "name", "Card"), "show_button": False}
+            v = {"id": getattr(c, "id", None), "type": c.__class__.__name__, "name": getattr(c, "name", "Card"), "show_button": False}
 
         hand_views.append(v)
 
@@ -109,5 +122,11 @@ def event_view(event: Any) -> Dict[str, Any]:
         base["winning_stat"] = event.winning_stat
     if hasattr(event, "fan_penalty"):
         base["fan_penalty"] = event.fan_penalty
+
+    # Double-stat event fields
+    if hasattr(event, "stat1"):
+        base["stat1"] = event.stat1
+    if hasattr(event, "stat2"):
+        base["stat2"] = event.stat2
 
     return base

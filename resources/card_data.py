@@ -6,7 +6,7 @@ import uuid
 from typing import List
 from engine.models.cards import (
     StarCard, ModifyStatCard, FanCard,
-    StatContestEvent
+    StatContestEvent, DoubleStatEvent
 )
 
 def get_star_cards() -> List[StarCard]:
@@ -228,12 +228,12 @@ def get_power_cards() -> List[ModifyStatCard]:
     return cards
 
 def get_event_cards():
-    """Return a list of Event Cards - SIMPLIFIED to basic single-stat contests only
+    """Return a list of Event Cards - single-stat and double-stat contests
 
-    Complex event types backed up in card_data_backup_complex_events.py
+    8 single-stat events + 6 double-stat events = 14 total event cards
     """
     cards = [
-        # Simple single-stat contests - highest wins
+        # ===== SINGLE-STAT CONTESTS (8 cards) =====
         StatContestEvent(
             id=str(uuid.uuid4()),
             name="Rap Battle",
@@ -296,6 +296,63 @@ def get_event_cards():
             name="Icon Status",
             description="Who's more legendary?",
             stat_options=["legacy"],
+            contest_type="highest",
+            fan_reward=1
+        ),
+
+        # ===== DOUBLE-STAT CONTESTS (6 cards) =====
+        # All 2-stat combinations - sum both stats to determine winner
+        DoubleStatEvent(
+            id=str(uuid.uuid4()),
+            name="Performance Review",
+            description="Combine star power with raw talent",
+            stat1="aura",
+            stat2="talent",
+            contest_type="highest",
+            fan_reward=1
+        ),
+        DoubleStatEvent(
+            id=str(uuid.uuid4()),
+            name="Celebrity Summit",
+            description="Star power meets social reach",
+            stat1="aura",
+            stat2="influence",
+            contest_type="highest",
+            fan_reward=1
+        ),
+        DoubleStatEvent(
+            id=str(uuid.uuid4()),
+            name="Icon Recognition",
+            description="Present aura with lasting legacy",
+            stat1="aura",
+            stat2="legacy",
+            contest_type="highest",
+            fan_reward=1
+        ),
+        DoubleStatEvent(
+            id=str(uuid.uuid4()),
+            name="Career Breakthrough",
+            description="Talent meets influence in a pivotal moment",
+            stat1="talent",
+            stat2="influence",
+            contest_type="highest",
+            fan_reward=1
+        ),
+        DoubleStatEvent(
+            id=str(uuid.uuid4()),
+            name="Timeless Performance",
+            description="Skill that stands the test of time",
+            stat1="talent",
+            stat2="legacy",
+            contest_type="highest",
+            fan_reward=1
+        ),
+        DoubleStatEvent(
+            id=str(uuid.uuid4()),
+            name="Cultural Impact",
+            description="Social reach creating lasting change",
+            stat1="influence",
+            stat2="legacy",
             contest_type="highest",
             fan_reward=1
         ),

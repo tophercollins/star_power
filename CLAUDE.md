@@ -21,6 +21,29 @@
 
 ---
 
+## ⚠️ IMPORTANT: Legacy Code Warning
+
+**DO NOT USE OR MODIFY LEGACY CODE**
+
+The following directories and files contain **deprecated legacy code** that is **no longer maintained** and should **NOT be used, modified, or referenced**:
+
+- `utils/card_loader.py` - Old Google Sheets integration (replaced by `resources/card_data.py`)
+- `utils/google_client.py` - Google Sheets authentication (no longer used)
+- Any references to Google Sheets or gspread library
+- All Google Sheets-related functions in other files
+
+**Current Approach:**
+- Card data is now **hardcoded** in `resources/card_data.py`
+- Functions like `get_star_cards()`, `get_power_cards()`, `get_event_cards()`, `get_fan_cards()` provide card data directly
+- No external dependencies on Google Sheets API
+
+**If you see code referencing Google Sheets:**
+- Consider it legacy/deprecated
+- Use `resources/card_data.py` instead
+- Do NOT attempt to "fix" or "improve" Google Sheets code
+
+---
+
 ## What is Star Power?
 
 ### Game Concept

@@ -3,6 +3,7 @@ import uuid
 from engine.models.cards import (
     StarCard,
     StatContestEvent,
+    DoubleStatEvent,
     FanCard,
     PowerCard,            # if you later load power cards
     ModifyStatCard,       # optional
@@ -72,10 +73,23 @@ def load_event_cards(sheet):
             events.append(
                 StatContestEvent(
                     id=_new_id(),
-                    name=row["Name"], 
+                    name=row["Name"],
                     stat_options=[s.strip() for s in row["Stat Options"].split(",")]
                     )
                 )
+        elif row.get("Type") == "Double Stat":
+            # Double-stat events sum two stats together
+            stat1 = row.get("Stat1", "aura").strip().lower()
+            stat2 = row.get("Stat2", "talent").strip().lower()
+            events.append(
+                DoubleStatEvent(
+                    id=_new_id(),
+                    name=row["Name"],
+                    stat1=stat1,
+                    stat2=stat2,
+                    description=row.get("Description", f"Sum {stat1} and {stat2}")
+                )
+            )
         else:
             print(f"Skipping unknown event type: {row}")
     return events
