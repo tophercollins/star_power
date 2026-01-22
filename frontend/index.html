@@ -637,10 +637,10 @@
         <div id="gameContainer" class="hidden">
             <div class="game-info">
                 <div class="info-section">
-                    <strong>ID:</strong> <span id="gameId">-</span> | <strong>R:</strong> <span id="turn">-</span> | <strong>Ph:</strong> <span id="phase">play</span> | <strong>1st:</strong> <span id="firstPlayer">-</span>
+                    <strong>Round:</strong> <span id="turn">-</span> | <strong>Phase:</strong> <span id="phase">play</span>
                 </div>
                 <div class="info-section">
-                    <strong>Decks:</strong> M: <span id="mainDeck">0</span> | E: <span id="eventDeck">0</span> | F: <span id="fanDeck">0</span>
+                    <strong>Main:</strong> <span id="mainDeck">0</span> | <strong>Fan:</strong> <span id="fanDeck">0</span>
                 </div>
                 <div class="info-section">
                     <strong>Fans:</strong> You: <span class="fan-counter" id="yourFans">0</span>/<span id="fansToWin">5</span> | Opp: <span class="fan-counter" id="opponentFans">0</span>/<span id="fansToWin2">5</span>
@@ -653,21 +653,6 @@
                     <div class="game-over-title">🏆 GAME OVER! 🏆</div>
                     <div class="game-over-message" id="gameOverMessage">Winner!</div>
                     <button class="new-game-button" onclick="createGame()">🎮 New Game</button>
-                </div>
-            </div>
-
-            <!-- Event Display -->
-            <div id="eventContainer" class="hidden">
-                <div class="event-banner">
-                    <div class="event-title" id="eventName">⚡ EVENT ⚡</div>
-                    <div class="event-description" id="eventDescription"></div>
-                    <div class="event-details" id="eventDetails"></div>
-                </div>
-
-                <div class="star-selection" id="starSelection">
-                    <h3 style="text-align: center; margin-bottom: 15px;">Choose Your Star and Stat</h3>
-                    <div id="statSelector" class="stat-selector"></div>
-                    <p style="text-align: center; margin-top: 15px; opacity: 0.8;">Click a star below to compete</p>
                 </div>
             </div>
 
@@ -684,6 +669,14 @@
                 <h2>🤖 <span id="opponentName">Computer</span>'s Stars</h2>
                 <div id="opponentStars" class="cards">
                     <div class="empty">No stars yet</div>
+                </div>
+            </div>
+
+            <!-- Event Display (Between Players) -->
+            <div id="eventContainer" class="hidden">
+                <div class="event-banner">
+                    <div class="event-title" id="eventName">⚡ EVENT ⚡</div>
+                    <div class="event-details" id="eventDetails"></div>
                 </div>
             </div>
 
@@ -1321,89 +1314,38 @@
             // Show event if it exists (except during game over)
             if (!event || phase === 'game_over') {
                 eventContainer.classList.add('hidden');
-                selectedStar = null;
-                selectedStat = null;
                 return;
             }
 
             eventContainer.classList.remove('hidden');
 
-            // Event details - check if player has already selected
-            const playerHasSelected = currentGameState.player_selections?.['0'] !== undefined;
-            const eventPhaseText = playerHasSelected ? '✅ STAR SELECTED!' : '🎯 SELECT YOUR STAR FOR EVENT';
-            document.getElementById('eventName').textContent = `${eventPhaseText}\n⚡ ${event.name} ⚡`;
-            document.getElementById('eventDescription').textContent = event.description;
+            // Simplified event display - just show the event name
+            document.getElementById('eventName').textContent = `⚡ ${event.name} ⚡`;
 
             const detailsDiv = document.getElementById('eventDetails');
             detailsDiv.innerHTML = '';
 
+            // Simple format: Event: Type: X | Stats: Y | Winner: Z | Reward: N fans
             if (event.event_type === 'stat_contest') {
+                const statName = event.stat_options?.[0]?.toUpperCase() || 'STAT';
                 detailsDiv.innerHTML = `
-                    <div class="event-detail">Type: Stat Contest</div>
-                    <div class="event-detail">Winner: ${event.contest_type === 'highest' ? 'Highest' : 'Lowest'}</div>
-                    <div class="event-detail">Reward: ${event.fan_reward} fans</div>
+                    <div style="font-size: 11px; text-align: center;">
+                        <strong>Type:</strong> Stat Contest |
+                        <strong>Stat:</strong> ${statName} |
+                        <strong>Winner:</strong> Highest |
+                        <strong>Reward:</strong> ${event.fan_reward} fan${event.fan_reward > 1 ? 's' : ''}
+                    </div>
                 `;
             } else if (event.event_type === 'double_stat') {
                 const stat1Name = event.stat1?.toUpperCase() || 'STAT1';
                 const stat2Name = event.stat2?.toUpperCase() || 'STAT2';
                 detailsDiv.innerHTML = `
-                    <div class="event-detail">Type: Double-Stat Sum</div>
-                    <div class="event-detail">Stats: ${stat1Name} + ${stat2Name}</div>
-                    <div class="event-detail">Winner: Highest Combined</div>
-                    <div class="event-detail">Reward: ${event.fan_reward} fans</div>
-                `;
-            } else if (event.event_type === 'combined_stat') {
-                detailsDiv.innerHTML = `
-                    <div class="event-detail">Type: Combined Stats</div>
-                    <div class="event-detail">Stats: ${event.required_stats?.join(' + ')}</div>
-                    <div class="event-detail">Reward: ${event.fan_reward} fans</div>
-                `;
-            } else if (event.event_type === 'threshold') {
-                detailsDiv.innerHTML = `
-                    <div class="event-detail">Type: Threshold</div>
-                    <div class="event-detail">Required: ${event.required_stat} ≥ ${event.threshold}</div>
-                    <div class="event-detail">Winner: Highest ${event.winning_stat}</div>
-                    <div class="event-detail">Reward: ${event.fan_reward} fans</div>
-                `;
-            } else if (event.event_type === 'tag_based') {
-                detailsDiv.innerHTML = `
-                    <div class="event-detail">Type: Tag-Based</div>
-                    <div class="event-detail">Required Tags: ${event.required_tags?.join(', ')}</div>
-                    <div class="event-detail">Winner: Highest ${event.winning_stat}</div>
-                    <div class="event-detail">Reward: ${event.fan_reward} fans</div>
-                `;
-            } else if (event.event_type === 'risk_reward') {
-                detailsDiv.innerHTML = `
-                    <div class="event-detail">Type: Risk/Reward</div>
-                    <div class="event-detail">Winner: +${event.fan_reward} fans</div>
-                    <div class="event-detail">Loser: -${event.fan_penalty} fans</div>
-                `;
-            } else if (event.event_type === 'shared_reward') {
-                detailsDiv.innerHTML = `
-                    <div class="event-detail">Type: Shared Reward</div>
-                    <div class="event-detail">Winner: +${event.winner_fans} fans</div>
-                    <div class="event-detail">Runner-up: +${event.loser_fans} fans</div>
-                `;
-            }
-
-            // Stat selector - simplified for single-stat events
-            const statSelectorDiv = document.getElementById('statSelector');
-            statSelectorDiv.innerHTML = '';
-
-            // All events now have stat_options with a single stat
-            if (event.stat_options && event.stat_options.length > 0) {
-                // Auto-select the first (and only) stat
-                selectedStat = event.stat_options[0];
-
-                // Display which stat will be used
-                const statName = selectedStat.toUpperCase();
-                statSelectorDiv.innerHTML = `
-                    <p style="text-align: center; font-size: 18px; font-weight: bold; color: #ffd700;">
-                        🎯 Using: ${statName}
-                    </p>
-                    <p style="text-align: center; margin-top: 5px; opacity: 0.9;">
-                        Highest ${statName} wins!
-                    </p>
+                    <div style="font-size: 11px; text-align: center;">
+                        <strong>Type:</strong> Double-Stat Sum |
+                        <strong>Stats:</strong> ${stat1Name} + ${stat2Name} |
+                        <strong>Winner:</strong> Highest Combined |
+                        <strong>Reward:</strong> ${event.fan_reward} fan${event.fan_reward > 1 ? 's' : ''}
+                    </div>
                 `;
             }
         }
