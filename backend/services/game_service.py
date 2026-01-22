@@ -201,12 +201,12 @@ class GameService:
             "payload": {}
         }
 
-        logger.info(f"Game {game_id}: Ending turn {engine.turn}")
+        logger.info(f"Game {game_id}: Ending turn for player {engine.current_player_index} in round {engine.round}")
 
         # Dispatch to engine
         try:
             result = engine.dispatch(command)
-            logger.info(f"Game {game_id}: Turn ended, now turn {engine.turn}, phase: {engine.phase}")
+            logger.info(f"Game {game_id}: Turn ended, now round {engine.round}, phase: {engine.phase}")
             return result
         except Exception as e:
             logger.error(f"Error ending turn in game {game_id}: {str(e)}", exc_info=True)
