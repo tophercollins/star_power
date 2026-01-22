@@ -234,33 +234,30 @@ class GameEngine:
         return self.snapshot()
 
     def _handle_end_turn(self):
-        """Handle end of turn - computer plays, selects star, event resolves
+        """Handle end of turn in new sequential system
 
         Flow:
-        - Turn 1: Computer plays → Advance to turn 2 (draw event for turn 2)
-        - Turn 2+: Player selects star (already done) → Computer plays + selects star → Event resolves → Advance to next turn
-
-        Star selection is part of each player's turn, done during play phase.
+        - Player presses "End Turn"
+        - Check if active event needs resolution (owner's turn coming up)
+        - Resolve event if needed
+        - Advance to next player's turn
+        - Check win condition
         """
-        logger.info(f"Ending turn {self.turn}")
+        current_player = self.players[self.current_player_index]
+        logger.info(f"Ending turn for {current_player.name} (Round {self.round}, Player {self.current_player_index})")
 
-        # Computer AI takes its turn (seeing current event if it exists)
-        logger.info("Computer AI taking turn...")
-        self.computer_ai.take_turn(self)
+        # Check if there's an active event that needs resolution
+        # Event resolves at the END of the turn BEFORE the event owner's next turn
+        # So if owner is player 0, resolve when player 1 ends their turn
+        # If owner is player 1, resolve when player 0 ends their turn
+        next_player_index = (self.current_player_index + 1) % 2
 
-        # If there's an active event, computer selects for it (as last part of their turn)
-        if self.current_event:
-            self._computer_select_for_event()
-            # Both players should have selected by now, resolve event
-            if len(self.player_selections) == 2:
-                self._resolve_current_event()
-            else:
-                logger.warning(f"Event exists but not all players selected (selections: {len(self.player_selections)})")
-                # Resolve anyway with whoever selected
-                self._resolve_current_event()
-        else:
-            # Turn 1: No event yet, just advance to next turn
-            self._advance_to_next_turn()
+        if self.current_event and self.event_owner is not None and next_player_index == self.event_owner:
+            logger.info(f"Event owner's turn is next - resolving event before their turn")
+            self._resolve_current_event()
+
+        # Advance to next player's turn
+        self._advance_to_next_turn()
 
     def _resolve_current_event(self):
         """Resolve the current event with player selections
@@ -356,39 +353,41 @@ class GameEngine:
             logger.info(f"GAME OVER: {self.game_over_reason}")
 
     def _advance_to_next_turn(self):
-        """Advance to next turn - draw cards, increment turn, draw next event
+        """Advance to next player's turn in sequential system"""
+        # Move to next player
+        self.current_player_index = (self.current_player_index + 1) % 2
 
-        This happens AFTER event resolution, preparing for the next turn.
-        """
-        # Draw cards for both players (respecting hand limit)
+        # Reset play counters for the NEW current player
+        self.stars_played_this_turn[self.current_player_index] = 0
+        self.powers_played_this_turn[self.current_player_index] = 0
+        self.events_played_this_turn[self.current_player_index] = 0
+
+        # If we just advanced to player 0, a full round completed
+        if self.current_player_index == 0:
+            self.round += 1
+            logger.info(f"Round {self.round} started")
+
+        next_player = self.players[self.current_player_index]
+        logger.info(f"Now {next_player.name}'s turn (Round {self.round}, Player {self.current_player_index})")
+
+        # Draw card for the player whose turn it is now (respecting hand limit)
         max_hand_size = GAME_CONFIG["max_hand_size"]
-        for i, player in enumerate(self.players):
-            if len(player.hand) >= max_hand_size:
-                logger.info(f"{player.name} hand is full ({max_hand_size} cards) - cannot draw")
-                continue
-
+        if len(next_player.hand) >= max_hand_size:
+            logger.info(f"{next_player.name} hand is full ({max_hand_size} cards) - cannot draw")
+        else:
             card = draw_card(self.main_deck)
             if card:
-                player.hand.append(card)
-                logger.info(f"{player.name} drew a card: {card.name}")
+                next_player.hand.append(card)
+                logger.info(f"{next_player.name} drew: {card.name}")
 
-        # Increment turn
-        self.turn += 1
-        logger.info(f"Turn {self.turn} started")
+        # If computer's turn, have them play automatically
+        if self.current_player_index == 1:
+            logger.info("Computer AI taking turn...")
+            self.computer_ai.take_turn(self)
 
-        # Rotate first player (alternates each turn)
-        self.first_player_index = (self.first_player_index + 1) % len(self.players)
-        logger.info(f"First player this turn: {self.players[self.first_player_index].name}")
-
-        # Reset play counters
-        self.stars_played_this_turn = {0: 0, 1: 0}
-        self.powers_played_this_turn = {0: 0, 1: 0}
-
-        # Draw NEXT event if turn >= 2 (so it's visible when turn starts)
-        if self.turn >= 2 and len(self.event_deck.cards) > 0:
-            # Draw the event for this turn
-            self.current_event = draw_event(self.event_deck)
-            logger.info(f"Event drawn for turn {self.turn}: {self.current_event.name}")
+            # If there's an active event and computer hasn't selected yet, have them select
+            if self.current_event and self.event_owner is not None and 1 not in self.player_selections:
+                self._computer_select_for_event()
 
         # Set phase to play
         self.phase = "play"
@@ -414,12 +413,40 @@ class GameEngine:
                 logger.info(f"Computer selected {star.name} with stat {stat}")
                 # Note: Event will be resolved in _handle_end_turn(), not here
 
+    def _get_stat_for_event(self, event, star):
+        """Get the appropriate stat for an event based on event type
+
+        Args:
+            event: The event card
+            star: The star card competing
+
+        Returns:
+            str: The stat name to use for scoring
+        """
+        from engine.models.cards import StatContestEvent, DoubleStatEvent
+
+        if isinstance(event, StatContestEvent):
+            # Single stat events - use the first (and only) stat option
+            if event.stat_options and len(event.stat_options) > 0:
+                return event.stat_options[0]
+            return "aura"  # Fallback
+
+        elif isinstance(event, DoubleStatEvent):
+            # Double stat events - return both stats as a string for logging
+            # The actual resolution will sum both stats
+            return f"{event.stat1}+{event.stat2}"
+
+        else:
+            # Fallback for other event types
+            return "aura"
+
     def snapshot(self) -> Dict[str, Any]:
         return {
-            "turn": self.turn,
+            "round": self.round,
+            "current_player_index": self.current_player_index,
             "phase": self.phase,
-            "first_player_index": self.first_player_index,
             "current_event": event_view(self.current_event),
+            "event_owner": self.event_owner,
             "player_selections": {
                 str(k): {"star_id": v["star"].id if "star" in v else None, "stat": v.get("stat")}
                 for k, v in self.player_selections.items()

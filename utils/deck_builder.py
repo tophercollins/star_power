@@ -10,12 +10,14 @@ from resources.card_data import get_star_cards, get_power_cards, get_event_cards
 logger = logging.getLogger(__name__)
 
 def build_main_deck_from_cards():
-    """Build main deck from hardcoded card data"""
+    """Build main deck from hardcoded card data - includes stars, powers, AND events"""
     star_cards = get_star_cards()
     power_cards = get_power_cards()
+    event_cards = get_event_cards()
 
     total_star_cards = GAME_CONFIG["main_deck_composition"]["star_cards"]
     total_power_cards = GAME_CONFIG["main_deck_composition"]["power_cards"]
+    total_event_cards = GAME_CONFIG["main_deck_composition"]["event_cards"]
 
     # Sample stars
     picked_star_cards = random.sample(star_cards, k=min(total_star_cards, len(star_cards)))
@@ -25,10 +27,16 @@ def build_main_deck_from_cards():
     for card in power_cards:
         picked_power_cards.extend([card] * total_power_cards)
 
-    # Combine and shuffle
-    picked_cards = picked_star_cards + picked_power_cards
+    # Duplicate event cards - NEW: events are now in main deck
+    picked_event_cards = []
+    for card in event_cards:
+        picked_event_cards.extend([card] * total_event_cards)
+
+    # Combine and shuffle - stars + powers + events
+    picked_cards = picked_star_cards + picked_power_cards + picked_event_cards
     deck = Deck(name="Main Deck", cards=picked_cards)
     shuffle_deck(deck)
+    logger.info(f"Main deck built: {len(picked_star_cards)} stars, {len(picked_power_cards)} powers, {len(picked_event_cards)} events")
     return deck
 
 def build_event_deck_from_cards():

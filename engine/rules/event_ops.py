@@ -52,21 +52,39 @@ def can_star_participate(star: StarCard, event: EventCard) -> Tuple[bool, str]:
 def calculate_star_score(star: StarCard, event: EventCard, chosen_stat: Optional[str] = None) -> int:
     """
     Calculate a star's score for an event.
-    Simplified - all events are basic stat contests.
 
     Args:
         star: The star card
         event: The event card
-        chosen_stat: The stat chosen by the player
+        chosen_stat: The stat chosen by the player (ignored for double-stat events)
 
     Returns:
         The star's score for this event
     """
-    # All events are StatContestEvent - use chosen stat
-    if not chosen_stat:
-        logger.warning("StatContestEvent requires chosen_stat")
+    from engine.models.cards import StatContestEvent, DoubleStatEvent
+
+    if isinstance(event, DoubleStatEvent):
+        # Sum two stats
+        stat1_value = getattr(star, event.stat1, 0)
+        stat2_value = getattr(star, event.stat2, 0)
+        total = stat1_value + stat2_value
+        logger.info(f"{star.name}: {event.stat1}={stat1_value} + {event.stat2}={stat2_value} = {total}")
+        return total
+
+    elif isinstance(event, StatContestEvent):
+        # Single stat contest - use chosen_stat
+        if not chosen_stat:
+            logger.warning("StatContestEvent requires chosen_stat")
+            return 0
+        value = getattr(star, chosen_stat, 0)
+        logger.info(f"{star.name}: {chosen_stat}={value}")
+        return value
+
+    else:
+        # Fallback for other event types
+        if chosen_stat:
+            return getattr(star, chosen_stat, 0)
         return 0
-    return getattr(star, chosen_stat, 0)
 
 
 def resolve_event(
