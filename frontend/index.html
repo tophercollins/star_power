@@ -1272,10 +1272,11 @@
                     // Stars are also selectable when replacing (board full)
                     // Stars are also selectable when sacrificing for steal (step 2: select own star to sacrifice)
                     const selectableForEvent = hasEvent && !playerHasSelected && !card.exhausted;
+                    const selectableForEventCard = selectedEventCard !== null && !card.exhausted;
                     const selectableForPower = selectedPowerCard !== null;
                     const selectableForReplace = replacingStarFromHand !== null;
                     const selectableForSacrifice = selectedStealCard !== null && selectedStealCard.opponentStarIndex !== null;
-                    const isSelectable = selectableForEvent || selectableForPower || selectableForReplace || selectableForSacrifice;
+                    const isSelectable = selectableForEvent || selectableForEventCard || selectableForPower || selectableForReplace || selectableForSacrifice;
                     const isSelected = selectedStar === index;
                     yourStarsDiv.appendChild(renderCard(card, { starIndex: index, isSelectable, isSelected }));
                 });
