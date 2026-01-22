@@ -4,7 +4,7 @@ Simple AI for computer player that makes random decisions
 import random
 import logging
 from typing import Optional, Dict, Any
-from engine.models.cards import StarCard, PowerCard, StealStarCard
+from engine.models.cards import StarCard, PowerCard, StealStarCard, EventCard
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +32,12 @@ class ComputerPlayer:
         if game_engine.powers_played_this_turn[self.player_index] < 1:
             if len(player.star_cards) > 0:
                 if self._play_random_power(game_engine, player):
+                    action_taken = True
+
+        # Try to play an event card (if we haven't already this turn and have stars)
+        if game_engine.events_played_this_turn[self.player_index] < 1:
+            if len(player.star_cards) > 0 and game_engine.current_event is None:
+                if self._play_random_event(game_engine, player):
                     action_taken = True
 
         return action_taken
@@ -183,6 +189,48 @@ class ComputerPlayer:
         game_engine.dispatch(command)
         return True
 
+    def _play_random_event(self, game_engine, player) -> bool:
+        """Try to play a random event card with a random non-exhausted star"""
+        event_indices = [
+            i for i, card in enumerate(player.hand)
+            if isinstance(card, EventCard)
+        ]
+
+        if not event_indices:
+            logger.info(f"{player.name} has no event cards to play")
+            return False
+
+        # Pick random event card
+        hand_index = random.choice(event_indices)
+        card = player.hand[hand_index]
+
+        # Find non-exhausted stars to compete with
+        available_stars = [
+            (i, star) for i, star in enumerate(player.star_cards)
+            if not star.exhausted
+        ]
+
+        if not available_stars:
+            logger.info(f"{player.name} (AI) has no non-exhausted stars to compete in event")
+            return False
+
+        # Pick random non-exhausted star
+        target_star_index, target_star = random.choice(available_stars)
+
+        logger.info(f"{player.name} (AI) playing event '{card.name}' with star '{target_star.name}'")
+
+        # Use the dispatch system to play the event card
+        command = {
+            "type": "PLAY_CARD",
+            "payload": {
+                "player": self.player_index,
+                "hand_index": hand_index,
+                "target_star_index": target_star_index  # Star to compete in event
+            }
+        }
+        game_engine.dispatch(command)
+        return True
+
     def select_for_event(self, game_engine, event) -> Optional[Dict[str, Any]]:
         """
         Select a star and stat for an event
@@ -218,6 +266,12 @@ class ComputerPlayer:
 
     def _choose_stat_for_event(self, event, star) -> Optional[str]:
         """Choose which stat to use for this event"""
+        from engine.models.cards import DoubleStatEvent
+
+        # For double-stat events, return both stats (doesn't matter which order, system auto-selects)
+        if isinstance(event, DoubleStatEvent):
+            return f"{event.stat1}+{event.stat2}"  # Return string representation for logging
+
         # For events with stat_options, pick randomly
         if hasattr(event, 'stat_options') and event.stat_options:
             return random.choice(event.stat_options)
