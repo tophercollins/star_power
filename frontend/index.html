@@ -297,6 +297,41 @@
             pointer-events: none;
         }
 
+        .card.submitted-for-event {
+            border: 3px solid #ffd700 !important;
+            box-shadow: 0 0 30px rgba(255,215,0,1), 0 0 15px rgba(255,215,0,0.7) inset !important;
+            animation: pulse-glow 1.5s ease-in-out infinite;
+            position: relative;
+            opacity: 1 !important;
+            filter: none !important;
+        }
+
+        .card.submitted-for-event::before {
+            content: '⚡ IN EVENT ⚡';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #ffd700 0%, #f39c12 100%);
+            color: #000;
+            padding: 4px 2px;
+            font-size: 9px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 10;
+            border-radius: 5px 5px 0 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 30px rgba(255,215,0,1), 0 0 15px rgba(255,215,0,0.7) inset;
+            }
+            50% {
+                box-shadow: 0 0 50px rgba(255,215,0,1), 0 0 25px rgba(255,215,0,0.9) inset;
+            }
+        }
+
         .card-name {
             font-size: 12px;
             font-weight: bold;
@@ -1026,7 +1061,7 @@
 
         // Display functions
         function renderCard(card, options = {}) {
-            const { handIndex = null, starIndex = null, opponentStarIndex = null, isSelectable = false, isSelected = false } = options;
+            const { handIndex = null, starIndex = null, opponentStarIndex = null, isSelectable = false, isSelected = false, isSubmittedForEvent = false } = options;
 
             const div = document.createElement('div');
             let classes = ['card'];
@@ -1040,6 +1075,7 @@
                 // Power cards
                 classes.push('power-card');
             }
+            if (isSubmittedForEvent) classes.push('submitted-for-event');
             if (card.exhausted) classes.push('exhausted');
             if (isSelectable && !card.exhausted) classes.push('selectable');
             if (isSelected) classes.push('selected');
@@ -1253,9 +1289,15 @@
                 opponent.stars.forEach((card, index) => {
                     // Opponent stars are selectable when stealing (step 1: select opponent's star)
                     const selectableForSteal = selectedStealCard !== null && selectedStealCard.opponentStarIndex === null;
+
+                    // Check if this star has been submitted for the current event by opponent
+                    const opponentSelection = currentGameState.player_selections?.['1'];
+                    const isSubmittedForEvent = hasEvent && opponentSelection && opponentSelection.star_index === index;
+
                     opponentStarsDiv.appendChild(renderCard(card, {
                         opponentStarIndex: index,
-                        isSelectable: selectableForSteal
+                        isSelectable: selectableForSteal,
+                        isSubmittedForEvent
                     }));
                 });
             } else {
@@ -1278,7 +1320,12 @@
                     const selectableForSacrifice = selectedStealCard !== null && selectedStealCard.opponentStarIndex !== null;
                     const isSelectable = selectableForEvent || selectableForEventCard || selectableForPower || selectableForReplace || selectableForSacrifice;
                     const isSelected = selectedStar === index;
-                    yourStarsDiv.appendChild(renderCard(card, { starIndex: index, isSelectable, isSelected }));
+
+                    // Check if this star has been submitted for the current event
+                    const playerSelection = currentGameState.player_selections?.['0'];
+                    const isSubmittedForEvent = hasEvent && playerSelection && playerSelection.star_index === index;
+
+                    yourStarsDiv.appendChild(renderCard(card, { starIndex: index, isSelectable, isSelected, isSubmittedForEvent }));
                 });
             } else {
                 yourStarsDiv.innerHTML = '<div class="empty">No stars yet</div>';
