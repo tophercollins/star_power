@@ -1307,16 +1307,30 @@
             // Show event if it exists (except during game over)
             if (!event || phase === 'game_over') {
                 eventContainer.classList.add('hidden');
+                selectedStar = null;
+                selectedStat = null;
                 return;
             }
 
             eventContainer.classList.remove('hidden');
 
-            // Simplified event display - just show the event name
-            document.getElementById('eventName').textContent = `⚡ ${event.name} ⚡`;
+            // Check if player has already selected for this event
+            const playerHasSelected = currentGameState.player_selections?.['0'] !== undefined;
+            const statusText = playerHasSelected ? '✅ Selected' : '🎯 Select Star';
+
+            // Simplified event display - show event name with selection status
+            document.getElementById('eventName').textContent = `${statusText} | ⚡ ${event.name} ⚡`;
 
             const detailsDiv = document.getElementById('eventDetails');
             detailsDiv.innerHTML = '';
+
+            // Auto-select stat for event (needed for button logic)
+            if (event.stat_options && event.stat_options.length > 0) {
+                selectedStat = event.stat_options[0];
+            } else if (event.event_type === 'double_stat') {
+                // For double-stat events, use first stat as identifier
+                selectedStat = event.stat1;
+            }
 
             // Simple format: Event: Type: X | Stats: Y | Winner: Z | Reward: N fans
             if (event.event_type === 'stat_contest') {
