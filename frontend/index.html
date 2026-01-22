@@ -1198,17 +1198,10 @@
             const playerHasSelected = currentGameState.player_selections?.['0'] !== undefined;
 
             // Update game info
-            document.getElementById('gameId').textContent = currentGameId.substring(0, 8) + '...';
             document.getElementById('turn').textContent = currentGameState.round || 1;
             document.getElementById('phase').textContent = phase;
             document.getElementById('mainDeck').textContent = currentGameState.main_deck?.size || 0;
-            document.getElementById('eventDeck').textContent = currentGameState.event_deck?.size || 0;
             document.getElementById('fanDeck').textContent = currentGameState.fan_deck?.size || 0;
-
-            // Show who goes first this turn
-            const firstPlayerIndex = currentGameState.first_player_index || 0;
-            const firstPlayerName = currentGameState.players?.[firstPlayerIndex]?.name || '-';
-            document.getElementById('firstPlayer').textContent = firstPlayerName;
 
             // Update fan counts
             document.getElementById('yourFans').textContent = currentGameState.fan_counts?.player1 || 0;
