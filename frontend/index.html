@@ -245,6 +245,33 @@
             background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
         }
 
+        .card.event-card {
+            background: linear-gradient(135deg, #ff9ff3 0%, #9b59b6 100%);
+            border: 2px solid #8e44ad;
+        }
+
+        .card.event-card .card-name {
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .event-stat {
+            background: rgba(255,255,255,0.3);
+            padding: 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .event-reward {
+            text-align: center;
+            padding: 5px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
         .card.exhausted {
             opacity: 0.6;
             filter: grayscale(50%);
@@ -607,7 +634,7 @@
             <div class="game-info">
                 <div class="info-section">
                     <strong>Game ID:</strong> <span id="gameId">-</span><br>
-                    <strong>Turn:</strong> <span id="turn">-</span><br>
+                    <strong>Round:</strong> <span id="turn">-</span><br>
                     <strong>Phase:</strong> <span id="phase">play</span><br>
                     <strong>First Player:</strong> <span id="firstPlayer">-</span>
                 </div>
@@ -692,6 +719,7 @@
         let selectedStat = null;
         let selectedPowerCard = null;  // For targeting power cards
         let selectedStealCard = null;  // For steal cards - {handIndex, opponentStarIndex}
+        let selectedEventCard = null;  // For event cards - hand index of event being played
         let replacingStarFromHand = null;  // Hand index of star card to play when replacing
         let debugLogs = [];  // Store all logs for export
 
@@ -730,7 +758,7 @@
             let logText = '=== STAR POWER DEBUG LOGS ===\n';
             logText += `Export Time: ${new Date().toISOString()}\n`;
             logText += `Game ID: ${currentGameId || 'None'}\n`;
-            logText += `Turn: ${currentGameState?.turn || 'N/A'}\n`;
+            logText += `Round: ${currentGameState?.round || 'N/A'}\n`;
             logText += `Phase: ${currentGameState?.phase || 'N/A'}\n\n`;
 
             logText += '=== DEBUG LOGS ===\n';
@@ -893,8 +921,35 @@
             const card = player.hand[handIndex];
             log(`Card to play:`, card);
 
+            // Special handling for EventCard - requires immediate star selection
+            if (card.event_type) {
+                log('EventCard detected');
+
+                if (targetStarIndex === null) {
+                    log('Entering event mode - select your star to compete');
+                    selectedEventCard = handIndex;
+
+                    // Show appropriate message based on event type
+                    let statInfo = '';
+                    if (card.event_type === 'stat_contest') {
+                        const statName = card.stat_options?.[0]?.toUpperCase() || 'STAT';
+                        statInfo = ` (${statName} contest)`;
+                    } else if (card.event_type === 'double_stat') {
+                        const stat1 = card.stat1?.toUpperCase() || 'STAT1';
+                        const stat2 = card.stat2?.toUpperCase() || 'STAT2';
+                        statInfo = ` (${stat1} + ${stat2})`;
+                    }
+
+                    showMessage(`Playing "${card.name}"${statInfo} - Select your star to compete!`, 'info');
+                    displayGameState();
+                    return;
+                }
+
+                // Star selected - proceed to API call below
+                log(`Event ready: ${card.name} with star ${targetStarIndex}`);
+            }
             // Special handling for StealStarCard - two-step targeting
-            if (card.type === 'StealStarCard') {
+            else if (card.type === 'StealStarCard') {
                 log('StealStarCard detected');
 
                 // Step 1: Select opponent's star to steal
@@ -965,6 +1020,7 @@
                 showMessage('Card played!', 'success');
                 selectedPowerCard = null;  // Clear selection
                 selectedStealCard = null;  // Clear steal selection
+                selectedEventCard = null;  // Clear event selection
                 replacingStarFromHand = null;  // Clear replacement mode
                 displayGameState();
 
@@ -973,6 +1029,7 @@
                 showMessage('Error playing card: ' + error.message, 'error');
                 selectedPowerCard = null;
                 selectedStealCard = null;
+                selectedEventCard = null;
                 replacingStarFromHand = null;
             }
         }
@@ -983,7 +1040,16 @@
 
             const div = document.createElement('div');
             let classes = ['card'];
-            classes.push(card.type === 'StarCard' ? 'star-card' : 'power-card');
+            // Determine card class based on type
+            if (card.type === 'StarCard') {
+                classes.push('star-card');
+            } else if (card.event_type) {
+                // Event cards (have event_type field)
+                classes.push('event-card');
+            } else {
+                // Power cards
+                classes.push('power-card');
+            }
             if (card.exhausted) classes.push('exhausted');
             if (isSelectable && !card.exhausted) classes.push('selectable');
             if (isSelected) classes.push('selected');
@@ -1028,9 +1094,21 @@
                     attachedCardsHtml += '</div>';
                 }
             } else if (card.stat_modifiers) {
+                // Power cards with stat modifiers
                 Object.entries(card.stat_modifiers).forEach(([stat, value]) => {
                     statsHtml += `<div class="card-stat"><span>${stat}:</span><span>${value > 0 ? '+' : ''}${value}</span></div>`;
                 });
+            } else if (card.event_type) {
+                // Event cards
+                if (card.event_type === 'stat_contest') {
+                    const statName = card.stat_options?.[0]?.toUpperCase() || 'STAT';
+                    statsHtml += `<div class="card-stat event-stat"><span>⚔️ Contest:</span><span>${statName}</span></div>`;
+                } else if (card.event_type === 'double_stat') {
+                    const stat1Name = card.stat1?.toUpperCase() || 'STAT1';
+                    const stat2Name = card.stat2?.toUpperCase() || 'STAT2';
+                    statsHtml += `<div class="card-stat event-stat"><span>⚔️ Sum:</span><span>${stat1Name} + ${stat2Name}</span></div>`;
+                }
+                statsHtml += `<div class="event-reward">🎁 Reward: ${card.fan_reward || 1} fans</div>`;
             }
 
             let buttonHtml = '';
@@ -1083,13 +1161,21 @@
                 }
                 // Star is selectable for other actions
                 else if (isSelectable) {
+                    // Star selection for event card being played from hand
+                    if (selectedEventCard !== null && !card.exhausted) {
+                        div.onclick = () => {
+                            playCard(selectedEventCard, starIndex);
+                        };
+                        div.style.cursor = 'pointer';
+                        buttonHtml = `<button class="card-button" style="background: #9b59b6;" onclick="event.stopPropagation(); playCard(${selectedEventCard}, ${starIndex})">⚡ Use for Event</button>`;
+                    }
                     // Star selection for power card targeting
-                    if (selectedPowerCard !== null && !card.exhausted) {
+                    else if (selectedPowerCard !== null && !card.exhausted) {
                         div.onclick = () => {
                             playCard(selectedPowerCard, starIndex);
                         };
                     }
-                    // Star selection for events
+                    // Star selection for events (from automatic event system - old)
                     else if (selectedStat && !card.exhausted) {
                         div.onclick = () => {
                             selectedStar = starIndex;
@@ -1123,7 +1209,7 @@
 
             // Update game info
             document.getElementById('gameId').textContent = currentGameId.substring(0, 8) + '...';
-            document.getElementById('turn').textContent = currentGameState.turn || 1;
+            document.getElementById('turn').textContent = currentGameState.round || 1;
             document.getElementById('phase').textContent = phase;
             document.getElementById('mainDeck').textContent = currentGameState.main_deck?.size || 0;
             document.getElementById('eventDeck').textContent = currentGameState.event_deck?.size || 0;
@@ -1258,6 +1344,15 @@
                 detailsDiv.innerHTML = `
                     <div class="event-detail">Type: Stat Contest</div>
                     <div class="event-detail">Winner: ${event.contest_type === 'highest' ? 'Highest' : 'Lowest'}</div>
+                    <div class="event-detail">Reward: ${event.fan_reward} fans</div>
+                `;
+            } else if (event.event_type === 'double_stat') {
+                const stat1Name = event.stat1?.toUpperCase() || 'STAT1';
+                const stat2Name = event.stat2?.toUpperCase() || 'STAT2';
+                detailsDiv.innerHTML = `
+                    <div class="event-detail">Type: Double-Stat Sum</div>
+                    <div class="event-detail">Stats: ${stat1Name} + ${stat2Name}</div>
+                    <div class="event-detail">Winner: Highest Combined</div>
                     <div class="event-detail">Reward: ${event.fan_reward} fans</div>
                 `;
             } else if (event.event_type === 'combined_stat') {
